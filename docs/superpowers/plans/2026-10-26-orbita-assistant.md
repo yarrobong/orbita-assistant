@@ -40,12 +40,12 @@
 
 **Interfaces:** Foundation exports `App` and a CSS token sheet; Vite's build output is `dist/` and uses base `/orbita-assistant/`.
 
-- [ ] Create strict React/Vite project and minimum dependencies; pin package manager lockfile.
-- [ ] Add lint, typecheck, test, build and e2e scripts with deterministic CI job ordering.
-- [ ] Add responsive semantic app shell, error boundary and hash location helper.
-- [ ] Add first foundation check: production assets resolve with `/orbita-assistant/` and no external font/tracker URLs.
-- [ ] Run `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`.
-- [ ] Commit as `feat: add ORBITA app foundation`.
+- [x] Create strict React/Vite project and minimum dependencies; pin package manager lockfile.
+- [x] Add lint, typecheck, test, build and e2e scripts with deterministic CI job ordering.
+- [x] Add responsive semantic app shell, error boundary and hash location helper.
+- [x] Add first foundation check: production assets resolve with `/orbita-assistant/` and no external font/tracker URLs.
+- [x] Run `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`.
+- [x] Commit as `feat: add ORBITA app foundation`.
 
 ### Task 2: Source content and guarded flow engine
 
