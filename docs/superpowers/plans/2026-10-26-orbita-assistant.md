@@ -74,7 +74,7 @@
 - [x] Implement home, delivery, pickup and after-purchase flows; branch navigation and back preserve only still-valid fields.
 - [x] Implement searchable/filterable library of source-grounded answers, instant preview/editing, favorites and copy feedback.
 - [x] Implement device-only storage notice, clear-local-data action, keyboard/screen-reader support and responsive nav.
-- [x] Run unit/component tests (34 passed), Playwright E2E (7 passed, including 320–1440 widths), lint, typecheck and production build.
+- [x] Run unit/component tests (35 passed), Playwright E2E (9 passed, including 320–1440 widths and offline inventory checks), lint, typecheck and production build.
 - [x] Commit as `feat: build responsive sales assistant screens`.
 
 ### Task 4: PWA/offline, update behavior and performance gates

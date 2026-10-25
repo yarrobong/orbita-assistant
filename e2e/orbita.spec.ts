@@ -44,6 +44,21 @@ test('delivery gates each transition and review until receipt is confirmed', asy
   await expect(page.getByRole('button', { name: 'Я отправил сообщение' })).toHaveCount(0)
 })
 
+test('unverified stock stays neutral; an unavailable item needs a checked replacement', async ({ page }) => {
+  await page.goto('./#/home')
+  await page.getByRole('button', { name: /Новый покупатель/ }).click()
+  await page.getByRole('button', { name: 'Уточнить наличие' }).click()
+  await page.getByRole('textbox', { name: 'Какой товар проверили?' }).fill('Геймпад Quest')
+  await expect(page.getByLabel('Текст сообщения')).toHaveValue(/Наличие конкретного экземпляра уточню/)
+  await expect(page.getByLabel('Текст сообщения')).not.toHaveValue(/Да, товар в наличии/)
+  await page.getByLabel('Результат проверки остатка').selectOption('unavailable')
+  await page.getByRole('textbox', { name: 'Вариант на замену' }).fill('другую модель после проверки')
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeDisabled()
+  await page.getByLabel('Я проверил именно этот товар').check()
+  await expect(page.getByLabel('Текст сообщения')).toHaveValue(/другую модель после проверки/)
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+})
+
 test('a changed pickup slot clears confirmations and prevents a stale confirmed message', async ({ page }) => {
   await page.goto('./#/flow/pickup')
   await page.getByLabel('Товар', { exact: true }).fill('Крепление')
