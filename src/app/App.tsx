@@ -2,12 +2,13 @@ import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from '
 import { APP_BASE } from '../lib/config'
 import { templateCatalog } from '../data/templates'
 import { initialFlowState, transition } from '../domain/flow'
-import type { Template } from '../domain/types'
+import type { FlowPath, FlowState, Template } from '../domain/types'
 import CopyComposer from '../components/CopyComposer'
 import FlowScreen from '../features/FlowScreen'
 import HomeScreen from '../features/HomeScreen'
 import SettingsScreen from '../features/SettingsScreen'
 import TemplateLibrary from '../features/TemplateLibrary'
+import { primarySectionFor, resolveRoute, routeHash, type AppRoute } from './routes'
 import '../styles/app.css'
 
 type AppErrorBoundaryProps = { children: ReactNode }
@@ -20,10 +21,12 @@ class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundary
 }
 
 const navItems = [
-  { id: 'home', label: 'Главная', icon: '⌂' }, { id: 'flows', label: 'Сценарии', icon: '↗' },
-  { id: 'templates', label: 'Ответы', icon: '▤' }, { id: 'settings', label: 'Настройки', icon: '⚙' },
+  { id: 'home', label: 'Главная', icon: '⌂' },
+  { id: 'answers', label: 'Ответы', icon: '▤' },
+  { id: 'settings', label: 'Настройки', icon: '⚙' },
 ]
-const pathFromHash = () => window.location.hash.replace(/^#\/?/u, '') || 'home'
+const currentRoute = () => resolveRoute(window.location.hash)
+const replaceHash = (hash: string) => window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`)
 const safeReadFavorites = (): string[] => {
   try { const value: unknown = JSON.parse(localStorage.getItem('orbita:favorites') ?? '[]'); return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string' && templateCatalog.some((template) => template.id === id)) : [] } catch { return [] }
 }
@@ -47,14 +50,26 @@ function TemplateUse({ template, onBack }: { template: Template; onBack: () => v
 }
 
 function AppShell() {
-  const [route, setRoute] = useState(pathFromHash)
+  const [route, setRoute] = useState<AppRoute>(() => currentRoute().route)
   const [query, setQuery] = useState('')
   const [favorites, setFavorites] = useState(safeReadFavorites)
   const [lastScenario, setLastScenario] = useState<LastScenario | null>(safeReadLastScenario)
-  const [selectedTemplate, setSelectedTemplate] = useState('')
+  const [liveFlow, setLiveFlow] = useState<FlowState | null>(() => {
+    const initial = currentRoute().route
+    return initial.kind === 'flow' ? initialFlowState(initial.path) : null
+  })
   const [updateWorker, setUpdateWorker] = useState<ServiceWorker | null>(null)
   useEffect(() => {
-    const sync = () => setRoute(pathFromHash())
+    const sync = () => {
+      const resolved = currentRoute()
+      if (window.location.hash !== resolved.canonicalHash) replaceHash(resolved.canonicalHash)
+      setRoute(resolved.route)
+      if (resolved.route.kind === 'flow') {
+        const flowRoute = resolved.route
+        setLiveFlow((current) => current?.path === flowRoute.path ? current : initialFlowState(flowRoute.path))
+      }
+    }
+    sync()
     window.addEventListener('hashchange', sync)
     return () => window.removeEventListener('hashchange', sync)
   }, [])
@@ -89,37 +104,42 @@ function AppShell() {
     }
   }, [])
 
-  const navigate = (next: string) => { window.location.hash = `/${next}`; setRoute(next) }
+  const navigate = (next: AppRoute) => {
+    const hash = routeHash(next)
+    window.location.hash = hash
+    setRoute(next)
+  }
   const open = (id: string) => {
-    if (id === 'templates') { navigate('templates'); return }
-    const stage = ({ new: 'N0', delivery: 'D0', pickup: 'P0', 'after-purchase': 'AFTER' } as Record<string, string>)[id] ?? 'N0'
+    if (id === 'templates' || id === 'answers') { navigate({ kind: 'answers' }); return }
+    const path = (['new', 'delivery', 'pickup', 'after-purchase'].includes(id) ? id : 'new') as FlowPath
+    const stage = ({ new: 'N0', delivery: 'D0', pickup: 'P0', 'after-purchase': 'AFTER' } as Record<FlowPath, string>)[path]
     const next = { path: id, stage, reviewRequested: false, issueOpen: false }
+    setLiveFlow(initialFlowState(path))
     setLastScenario(next)
     localStorage.setItem('orbita:last-scenario', JSON.stringify(next))
-    navigate(`flow/${id}`)
+    navigate({ kind: 'flow', path })
   }
   const favorite = (id: string) => setFavorites((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id])
-  const selected = templateCatalog.find((template) => template.id === selectedTemplate)
-  const navRoute = route === 'home' ? 'home' : route.startsWith('flow/') ? 'flows' : route === 'settings' ? 'settings' : 'templates'
-  const handleGlobalSearch = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); navigate('templates') }
+  const selected = route.kind === 'template' ? templateCatalog.find((template) => template.id === route.id) : undefined
+  const navRoute = primarySectionFor(route)
+  const handleGlobalSearch = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); navigate({ kind: 'answers' }) }
 
   return <div className="app-frame" data-app-base={APP_BASE}>
-    <aside className="sidebar"><a className="brand" href="#/home" onClick={(event) => { event.preventDefault(); navigate('home') }}><span className="brand-mark" aria-hidden="true">O</span><span><strong>ORBITA</strong><small>Assistant</small></span></a>
-      <nav aria-label="Основная навигация" className="primary-nav">{navItems.map((item) => <button className={`nav-item${navRoute === item.id ? ' is-active' : ''}`} key={item.id} type="button" onClick={() => navigate(item.id)}><span className="nav-icon" aria-hidden="true">{item.icon}</span>{item.label}</button>)}</nav>
+    <aside className="sidebar"><a className="brand" href="#/home" onClick={(event) => { event.preventDefault(); navigate({ kind: 'home' }) }}><span className="brand-mark" aria-hidden="true">O</span><span><strong>ORBITA</strong><small>Assistant</small></span></a>
+      <nav aria-label="Основная навигация" className="primary-nav">{navItems.map((item) => <button aria-current={navRoute === item.id ? 'page' : undefined} className={`nav-item${navRoute === item.id ? ' is-active' : ''}`} key={item.id} type="button" onClick={() => navigate({ kind: item.id as 'home' | 'answers' | 'settings' })}><span className="nav-icon" aria-hidden="true">{item.icon}</span>{item.label}</button>)}</nav>
       <div className="sidebar-note">Локально на этом устройстве</div>
     </aside>
     <div className="workspace"><header className="topbar"><div className="mobile-brand"><span className="brand-mark" aria-hidden="true">O</span><strong>ORBITA Assistant</strong></div>
       <form className="search-form" role="search" onSubmit={handleGlobalSearch}><span aria-hidden="true" className="search-icon">⌕</span><input aria-label="Быстрый поиск" placeholder="Что нужно ответить?" type="search" value={query} onChange={(event) => setQuery(event.target.value)} /><kbd aria-hidden="true">⌘ K</kbd></form>
-      <button className="settings-button" aria-label="Настройки" type="button" onClick={() => navigate('settings')}>⚙</button></header>
+      <button className="settings-button" aria-label="Настройки" type="button" onClick={() => navigate({ kind: 'settings' })}>⚙</button></header>
       {updateWorker && <aside className="update-notice" role="status"><p>Доступно обновление. Скопируйте введённый текст перед перезапуском.</p><button className="button button-primary" type="button" onClick={() => updateWorker.postMessage({ type: 'ACTIVATE_UPDATE' })}>Обновить приложение</button><button className="update-dismiss" type="button" onClick={() => setUpdateWorker(null)}>Позже</button></aside>}
       <main className="main-content">
-        {route === 'home' && <HomeScreen onOpen={open} lastScenario={lastScenario} onContinue={() => { if (lastScenario) navigate(`flow/${lastScenario.path}`) }} />}
-        {route === 'flows' && <section><header className="page-heading"><p className="eyebrow">БЫСТРЫЙ СТАРТ</p><h1>Сценарии</h1><p className="lead">Выберите этап переписки, чтобы подготовить следующий ответ.</p></header><div className="action-grid">{['new', 'delivery', 'pickup', 'after-purchase'].map((id) => <button key={id} className="action-card" onClick={() => open(id)} type="button"><span className="action-copy"><strong>{{ new: 'Новый покупатель', delivery: 'Авито Доставка', pickup: 'Самовывоз', 'after-purchase': 'После покупки' }[id]}</strong></span><span className="action-arrow">↗</span></button>)}</div></section>}
-        {route.startsWith('flow/') && <FlowScreen key={route} kind={route.slice(5)} initialStage={lastScenario?.path === route.slice(5) ? lastScenario.stage : undefined} initialReviewRequested={lastScenario?.path === route.slice(5) && lastScenario.reviewRequested} initialIssueOpen={lastScenario?.path === route.slice(5) && lastScenario.issueOpen} onBack={() => navigate('home')} onStageChange={(path, stage) => setLastScenario((current) => ({ path, stage, reviewRequested: current?.path === path && current.reviewRequested, issueOpen: current?.path === path && current.issueOpen }))} onStatusChange={(state) => setLastScenario({ path: state.path, stage: state.stage, reviewRequested: state.flags.reviewRequested, issueOpen: state.flags.issueOpen })} />}
-        {route === 'templates' && <TemplateLibrary favorites={favorites} query={query} onQueryChange={setQuery} onFavorite={favorite} onUse={(id) => { setSelectedTemplate(id); navigate('use-template') }} />}
-        {route === 'use-template' && selected && <TemplateUse template={selected} onBack={() => navigate('templates')} />}
-        {route === 'settings' && <SettingsScreen onClear={() => { setFavorites([]); setLastScenario(null); localStorage.removeItem('orbita:last-scenario'); setSelectedTemplate(''); navigate('home') }} />}
-        {!['home', 'flows', 'templates', 'settings', 'use-template'].includes(route) && !route.startsWith('flow/') && <HomeScreen onOpen={open} />}
+        {route.kind === 'home' && <HomeScreen onOpen={open} lastScenario={lastScenario} onContinue={() => { if (lastScenario) navigate({ kind: 'flow', path: lastScenario.path as FlowPath }) }} />}
+        {route.kind === 'quick' && <section><header className="page-heading"><p className="eyebrow">БЫСТРЫЙ ОТВЕТ</p><h1>Что спросил покупатель?</h1></header></section>}
+        {route.kind === 'flow' && <FlowScreen kind={route.path} flowState={liveFlow?.path === route.path ? liveFlow : initialFlowState(route.path)} onFlowStateChange={setLiveFlow} initialStage={lastScenario?.path === route.path ? lastScenario.stage : undefined} initialReviewRequested={lastScenario?.path === route.path && lastScenario.reviewRequested} initialIssueOpen={lastScenario?.path === route.path && lastScenario.issueOpen} onBack={() => navigate({ kind: 'home' })} onStageChange={(path, stage) => setLastScenario((current) => ({ path, stage, reviewRequested: current?.path === path && current.reviewRequested, issueOpen: current?.path === path && current.issueOpen }))} onStatusChange={(state) => setLastScenario({ path: state.path, stage: state.stage, reviewRequested: state.flags.reviewRequested, issueOpen: state.flags.issueOpen })} />}
+        {route.kind === 'answers' && <TemplateLibrary favorites={favorites} query={query} onQueryChange={setQuery} onFavorite={favorite} onUse={(id) => navigate({ kind: 'template', id })} />}
+        {route.kind === 'template' && selected && <TemplateUse template={selected} onBack={() => navigate({ kind: 'answers' })} />}
+        {route.kind === 'settings' && <SettingsScreen onClear={() => { setFavorites([]); setLastScenario(null); setLiveFlow(null); localStorage.removeItem('orbita:last-scenario'); navigate({ kind: 'home' }) }} />}
       </main>
     </div>
   </div>

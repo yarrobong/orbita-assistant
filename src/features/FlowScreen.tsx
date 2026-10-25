@@ -4,7 +4,7 @@ import { canEnterStage, canRecommendReview, initialFlowState, transition } from 
 import type { FlagName, FlowPath, FlowState, Template } from '../domain/types'
 import CopyComposer from '../components/CopyComposer'
 
-type Props = { kind: string; initialStage?: string; initialReviewRequested?: boolean; initialIssueOpen?: boolean; onBack: () => void; onStageChange?: (path: FlowPath, stage: string) => void; onStatusChange?: (state: FlowState) => void }
+type Props = { kind: string; initialStage?: string; initialReviewRequested?: boolean; initialIssueOpen?: boolean; flowState?: FlowState; onFlowStateChange?: (state: FlowState) => void; onBack: () => void; onStageChange?: (path: FlowPath, stage: string) => void; onStatusChange?: (state: FlowState) => void }
 const byId = (id: string) => templateCatalog.find((template) => template.id === id)!
 const titleByPath: Record<FlowPath, string> = { new: 'Новый покупатель', delivery: 'Авито Доставка', pickup: 'Самовывоз', 'after-purchase': 'После покупки' }
 
@@ -23,12 +23,13 @@ function Confirm({ state, flag, label, onChange }: { state: FlowState; flag: Fla
   return <label className="check-row"><input type="checkbox" checked={state.flags[flag]} onChange={(event) => onChange(flag, event.target.checked)} />{label}</label>
 }
 
-export default function FlowScreen({ kind, initialStage, initialReviewRequested, initialIssueOpen, onBack, onStageChange, onStatusChange }: Props) {
+export default function FlowScreen({ kind, initialStage, initialReviewRequested, initialIssueOpen, flowState, onFlowStateChange, onBack, onStageChange, onStatusChange }: Props) {
   const path = (['new', 'delivery', 'pickup', 'after-purchase'].includes(kind) ? kind : 'new') as FlowPath
-  const [state, setState] = useState(() => {
+  const [localState, setLocalState] = useState(() => {
     const initial = initialFlowState(path)
     return { ...initial, ...(initialStage ? { stage: initialStage } : {}), flags: { ...initial.flags, reviewRequested: Boolean(initialReviewRequested), issueOpen: Boolean(initialIssueOpen) } }
   })
+  const state = flowState ?? localState
   const [newChoice, setNewChoice] = useState('')
   const [reviewSent, setReviewSent] = useState(Boolean(initialReviewRequested))
   const [issueMode, setIssueMode] = useState(false)
@@ -36,7 +37,8 @@ export default function FlowScreen({ kind, initialStage, initialReviewRequested,
     const next = transition(state, event)
     if (next.stage !== state.stage) onStageChange?.(next.path, next.stage)
     if (next.flags.reviewRequested !== state.flags.reviewRequested || next.flags.issueOpen !== state.flags.issueOpen) onStatusChange?.(next)
-    setState(next)
+    if (!flowState) setLocalState(next)
+    onFlowStateChange?.(next)
   }
   const chooseTemplate = (id: string): Template => byId(id)
   const stage = state.stage

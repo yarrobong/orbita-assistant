@@ -128,6 +128,21 @@ test('search, hash route reload, and narrow mobile view work without horizontal 
   }
 })
 
+test('template has a stable URL that survives reload and browser back', async ({ page }) => {
+  await page.goto('./#/answers')
+  const firstCard = page.locator('.template-card').first()
+  const title = await firstCard.locator('h2').textContent()
+  await firstCard.getByRole('button', { name: 'Открыть и подготовить' }).click()
+  await expect(page).toHaveURL(/#\/template\/[\w%-]+$/u)
+  await expect(page.locator('h1')).toHaveText(title!)
+
+  await page.reload()
+  await expect(page.locator('h1')).toHaveText(title!)
+  await page.goBack()
+  await expect(page).toHaveURL(/#\/answers$/u)
+  await expect(page.getByRole('heading', { name: 'Все ответы' })).toBeVisible()
+})
+
 test('home view has no WCAG A/AA axe violations', async ({ page }) => {
   await page.goto('./#/home')
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
@@ -6,13 +6,69 @@ afterEach(() => { cleanup(); Reflect.deleteProperty(navigator, 'serviceWorker');
 beforeEach(() => { window.location.hash = '#/home' })
 
 describe('app shell', () => {
-  it('shows the ORBITA workspace and a single primary navigation', () => {
+  it('shows exactly three primary sections and marks Home active', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: /orbita assistant/i })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.getAllByRole('navigation')).toHaveLength(1)
+    const nav = screen.getByRole('navigation', { name: 'Основная навигация' })
+    expect(nav.querySelectorAll('button')).toHaveLength(3)
+    expect(screen.getByRole('button', { name: 'Главная' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.queryByRole('button', { name: 'Сценарии' })).not.toBeInTheDocument()
     expect(document.querySelector('.app-frame')).toHaveAttribute('data-app-base', '/orbita-assistant/')
+  })
+
+  it('marks the active primary section from the current route', () => {
+    window.location.hash = '#/settings'
+    render(<App />)
+
+    const nav = screen.getByRole('navigation', { name: 'Основная навигация' })
+    expect(within(nav).getByRole('button', { name: 'Настройки' })).toHaveAttribute('aria-current', 'page')
+    expect(within(nav).getByRole('button', { name: 'Главная' })).not.toHaveAttribute('aria-current')
+  })
+
+  it.each([
+    ['#/flows', '#/home'],
+    ['#/templates', '#/answers'],
+    ['#/use-template', '#/answers'],
+  ])('redirects legacy route %s to %s', async (legacy, current) => {
+    window.location.hash = legacy
+    render(<App />)
+
+    expect(await screen.findByRole('main')).toBeInTheDocument()
+    expect(window.location.hash).toBe(current)
+  })
+
+  it('opens a template from its stable URL and keeps Answers active after reload', () => {
+    window.location.hash = '#/template/top-02'
+    const { unmount } = render(<App />)
+
+    expect(screen.getAllByRole('heading', { name: 'Доставка — оформление' })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Ответы' })).toHaveAttribute('aria-current', 'page')
+    unmount()
+
+    render(<App />)
+    expect(screen.getAllByRole('heading', { name: 'Доставка — оформление' })).toHaveLength(2)
+  })
+
+  it('routes an unknown template ID to Answers safely', async () => {
+    window.location.hash = '#/template/not-a-template'
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Все ответы' })).toBeInTheDocument()
+    expect(window.location.hash).toBe('#/answers')
+  })
+
+  it('keeps an in-progress pickup draft while visiting Answers and returning', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /Самовывоз/ }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Дата' }), { target: { value: '30 октября' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Ответы' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Главная' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }))
+
+    expect(screen.getByRole('textbox', { name: 'Дата' })).toHaveValue('30 октября')
   })
 
   it('opens a neutral pickup flow without promising a confirmed visit', () => {
