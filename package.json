@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "audit:public": "node scripts/audit-public-data.mjs src/data public dist"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

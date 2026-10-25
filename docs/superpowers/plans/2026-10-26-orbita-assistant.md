@@ -55,12 +55,12 @@
 
 **Interfaces:** `canUseTemplate(template, state): GuardResult`; `transition(state, event): FlowState`; `renderTemplate(template, fields): RenderResult`; `searchTemplates(templates, query, category): Template[]`; `validateImport(input): ImportResult`.
 
-- [ ] Write failing unit tests for graph reachability/terminals, pickup guards and invalidation, delivery and review guards, product reset, required placeholders, search phrases, and import rejection cases.
-- [ ] Confirm those tests fail for missing implementation.
-- [ ] Normalize and vet the workbook's 52 base answers, 22 safe replies and 29 deal steps, keeping usage/check notes; strip exact address and personal contact. Report catalog count and any deduplication.
-- [ ] Implement pure flow transitions, audience boundary, gates, interpolation and search; import validation rejects malformed JSON, wrong types, oversize content, duplicate ids and forbidden key patterns atomically.
-- [ ] Run focused tests, full `npm run test`, lint and typecheck; run public-data audit against source/catalog and `dist`.
-- [ ] Commit as `feat: add guarded sales flows and content library`.
+- [x] Write failing unit tests for graph reachability/terminals, pickup guards and invalidation, delivery and review guards, product reset, required placeholders, search phrases, and import rejection cases.
+- [x] Confirm those tests fail for missing implementation.
+- [x] Normalize and vet the workbook's 52 base answers, 22 safe replies and 29 deal steps, keeping usage/check notes; strip exact address and personal contact. Report catalog count and any deduplication.
+- [x] Implement pure flow transitions, audience boundary, gates, interpolation and search; import validation rejects malformed JSON, wrong types, oversize content, duplicate ids and forbidden key patterns atomically.
+- [x] Run focused tests, full `npm run test`, lint and typecheck; run public-data audit against source/catalog and `dist`.
+- [x] Commit as `feat: add guarded sales flows and content library`.
 
 ### Task 3: P0 user screens
 
