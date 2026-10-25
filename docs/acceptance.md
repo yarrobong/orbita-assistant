@@ -6,7 +6,7 @@
 
 - App: <https://yarrobong.github.io/orbita-assistant/>
 - Public repository: <https://github.com/yarrobong/orbita-assistant>
-- Deployment and Main CI: [successful GitHub Actions run](https://github.com/yarrobong/orbita-assistant/actions/runs/40241691966)
+- Deployment and Main CI: [successful GitHub Actions run](https://github.com/yarrobong/orbita-assistant/actions/runs/40242439344)
 - Published from `main` with GitHub Pages Actions; no server process is required.
 
 ## P0 criteria
