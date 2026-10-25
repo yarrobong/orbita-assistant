@@ -35,11 +35,11 @@
 
 **Interfaces:** Route parsing returns one of home, answers, settings, quick, flow path, or template ID. Three nav items map only to home, answers, settings. Legacy `flows`, `templates`, and `use-template` hashes redirect to the equivalent supported route.
 
-- [ ] Write failing tests for three active nav states, legacy redirects, direct/reload template routes, browser back, and invalid IDs.
-- [ ] Run the focused tests and confirm they fail for the missing routes/nav behavior.
-- [ ] Implement route parsing and redirects; derive active nav from route; retain the live scenario state in the app shell across internal navigation.
-- [ ] Run focused tests and the full unit suite.
-- [ ] Commit as `feat: simplify ORBITA navigation and routing`.
+- [x] Write failing tests for three active nav states, legacy redirects, direct/reload template routes, browser back, and invalid IDs.
+- [x] Run the focused tests and confirm they fail for the missing routes/nav behavior.
+- [x] Implement route parsing and redirects; derive active nav from route; retain the live scenario state in the app shell across internal navigation.
+- [x] Run focused tests and the full unit suite.
+- [x] Commit as `feat: simplify ORBITA navigation and routing`.
 
 ### Task 2: Safe delivery and pickup state transitions
 
@@ -47,10 +47,10 @@
 
 **Interfaces:** Add independent pickup state for buyer message prepared and buyer notified. `pickupConfirmationReady` depends on verified stock, point confirmation, date/time/product, address, and contact permission, but not buyer notification. Keep review eligibility dependent on completed handover and no open issue.
 
-- [ ] Write failing unit/e2e tests for preparing pickup confirmation before buyer notification, blocking without point confirmation, state invalidation on product/date/time/address/contact edits, delivery neutral replies at any selected stage, and fresh-deal isolation.
-- [ ] Run the focused tests and confirm the expected guard failures.
-- [ ] Implement the minimal state/guard changes and expose only the current step’s checks and factual statuses in each flow.
-- [ ] Run domain tests and focused Playwright cases.
+- [x] Write failing unit/e2e tests for preparing pickup confirmation before buyer notification, blocking without point confirmation, state invalidation on product/date/time/address/contact edits, delivery neutral replies at any selected stage, and fresh-deal isolation.
+- [x] Run the focused tests and confirm the expected guard failures.
+- [x] Implement the minimal state/guard changes and expose only the current step’s checks and factual statuses in each flow.
+- [x] Run domain tests and focused Playwright cases.
 - [ ] Commit as `fix: remove pickup confirmation cycles`.
 
 ### Task 3: Quick answers, composer, library, and recent/favorite access

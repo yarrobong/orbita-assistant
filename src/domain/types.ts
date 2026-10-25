@@ -5,7 +5,7 @@ export type SourceCollection = 'Топ-15' | 'Все ответы' | 'Автоо
 
 export type FlagName =
   | 'stockConfirmed' | 'deliveryAvailable' | 'orderVerified' | 'shippedVerified'
-  | 'arrivedVerified' | 'receivedVerified' | 'handoverConfirmed' | 'meetingConfirmed' | 'addressConfirmed'
+  | 'arrivedVerified' | 'receivedVerified' | 'handoverConfirmed' | 'buyerMessagePrepared' | 'buyerNotified' | 'addressConfirmed'
   | 'contactPermission' | 'handoverCompleted' | 'reviewRequested' | 'issueOpen'
   | 'compatibilityChecked' | 'variantChecked' | 'priceConfirmed' | 'termsConfirmed'
 

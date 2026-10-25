@@ -25,6 +25,21 @@ describe('source-grounded template catalog', () => {
     expect(request.guardFlags).toContain('reviewNotRequested')
   })
 
+  it('requires verification only for the factual delivery and pickup confirmations', () => {
+    const guards = (id: string) => templateCatalog.find((item) => item.id === id)!.guardFlags
+
+    expect(guards('top-05')).toContain('shippedVerified')
+    expect(guards('R44')).toContain('arrivedVerified')
+    expect(guards('R45')).toContain('receivedVerified')
+    expect(guards('scenario-08')).toContain('shippedVerified')
+    expect(guards('scenario-09')).toContain('arrivedVerified')
+    expect(guards('scenario-11')).toContain('receivedVerified')
+    expect(guards('scenario-14')).not.toContain('stockConfirmed')
+    expect(guards('scenario-17')).not.toContain('meetingConfirmed')
+    expect(guards('top-10')).not.toContain('meetingConfirmed')
+    expect(guards('scenario-18')).toContain('buyerNotified')
+  })
+
   it('does not expose in-stock or out-of-stock claims until that exact status is confirmed', () => {
     const available = templateCatalog.find((item) => item.id === 'R01')!
     const unavailable = templateCatalog.find((item) => item.id === 'R07')!

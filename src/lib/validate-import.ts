@@ -11,7 +11,7 @@ const allowedCategories = new Set<TemplateCategory>([
 ])
 const allowedFlags = new Set([
   'stockConfirmed', 'deliveryAvailable', 'orderVerified', 'shippedVerified', 'receivedVerified',
-  'handoverConfirmed', 'meetingConfirmed', 'addressConfirmed', 'contactPermission', 'handoverCompleted',
+  'handoverConfirmed', 'buyerMessagePrepared', 'buyerNotified', 'addressConfirmed', 'contactPermission', 'handoverCompleted',
   'reviewRequested', 'issueOpen', 'compatibilityChecked', 'variantChecked', 'priceConfirmed', 'termsConfirmed',
   'stockAvailable', 'stockUnavailable', 'noIssueOpen', 'reviewNotRequested', 'handoverContext',
 ])

@@ -10,6 +10,7 @@ type Props = {
   onFieldChange: (field: string, value: string) => void
   onConfirm?: (flag: FlagName, value: boolean) => void
   onAudienceChange?: (audience: Audience) => void
+  onCopied?: () => void
   showGuardControls?: boolean
   showRequiredFields?: boolean
 }
@@ -27,7 +28,8 @@ const flagLabels: Partial<Record<FlagName, string>> = {
   arrivedVerified: 'Проверил прибытие заказа в Авито',
   receivedVerified: 'Проверил, что покупатель получил товар',
   handoverConfirmed: 'Человек на точке подтвердил товар и время',
-  meetingConfirmed: 'Сверил и подтвердил встречу покупателю',
+  buyerMessagePrepared: 'Сообщение покупателю подготовлено',
+  buyerNotified: 'Покупатель уведомлён',
   addressConfirmed: 'Проверил адрес выдачи',
   contactPermission: 'Получил разрешение передать контакт',
   handoverCompleted: 'Подтвердил фактическую передачу товара',
@@ -37,7 +39,7 @@ const flagLabels: Partial<Record<FlagName, string>> = {
   priceConfirmed: 'Проверил цену или скидку',
   termsConfirmed: 'Проверил условия гарантии или возврата',
 }
-const nonInteractiveGuards = new Set(['noIssueOpen', 'reviewNotRequested', 'handoverContext'])
+const nonInteractiveGuards = new Set(['noIssueOpen', 'reviewNotRequested', 'handoverContext', 'buyerMessagePrepared', 'buyerNotified'])
 
 function missingMessage(missing: string[]): string {
   const labels = missing.map((field) => (fieldLabels[field] ?? field).toLocaleLowerCase('ru-RU'))
@@ -45,7 +47,7 @@ function missingMessage(missing: string[]): string {
   return `Заполните: ${labels.join(', ')}.`
 }
 
-export default function CopyComposer({ template, state, onFieldChange, onConfirm, onAudienceChange, showGuardControls = true, showRequiredFields = true }: Props) {
+export default function CopyComposer({ template, state, onFieldChange, onConfirm, onAudienceChange, onCopied, showGuardControls = true, showRequiredFields = true }: Props) {
   const textarea = useRef<HTMLTextAreaElement>(null)
   const [draft, setDraft] = useState<{ templateId: string; source: string; text: string } | null>(null)
   const [copyStatus, setCopyStatus] = useState<{ source: string; message: string } | null>(null)
@@ -64,6 +66,7 @@ export default function CopyComposer({ template, state, onFieldChange, onConfirm
     const copied = await copyText(editedText)
     if (copied) {
       setCopyStatus({ source: rendered.text, message: 'Скопировано' })
+      onCopied?.()
     } else {
       textarea.current?.focus()
       textarea.current?.select()

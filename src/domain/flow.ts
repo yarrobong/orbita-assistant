@@ -8,7 +8,8 @@ export const emptyFlags = (): FlowFlags => ({
   arrivedVerified: false,
   receivedVerified: false,
   handoverConfirmed: false,
-  meetingConfirmed: false,
+  buyerMessagePrepared: false,
+  buyerNotified: false,
   addressConfirmed: false,
   contactPermission: false,
   handoverCompleted: false,
@@ -39,17 +40,19 @@ export function transition(state: FlowState, event: FlowEvent): FlowState {
     const fields = { ...state.fields, [event.field]: event.value }
     let flags = state.flags
     if (event.field === 'product' || event.field === 'variant') {
-      flags = clearFlags(state, 'stockConfirmed', 'deliveryAvailable', 'orderVerified', 'shippedVerified', 'arrivedVerified', 'receivedVerified', 'compatibilityChecked', 'variantChecked', 'handoverConfirmed', 'meetingConfirmed', 'addressConfirmed', 'contactPermission', 'handoverCompleted')
+      flags = clearFlags(state, 'stockConfirmed', 'deliveryAvailable', 'orderVerified', 'shippedVerified', 'arrivedVerified', 'receivedVerified', 'compatibilityChecked', 'variantChecked', 'handoverConfirmed', 'buyerMessagePrepared', 'buyerNotified', 'addressConfirmed', 'contactPermission', 'handoverCompleted')
       delete fields.stockStatus
       if (event.field === 'product') delete fields.variant
     } else if (event.field === 'date' || event.field === 'time') {
-      flags = clearFlags(state, 'handoverConfirmed', 'meetingConfirmed', 'handoverCompleted')
+      flags = clearFlags(state, 'handoverConfirmed', 'buyerMessagePrepared', 'buyerNotified', 'handoverCompleted')
     } else if (event.field === 'address') {
-      flags = clearFlags(state, 'addressConfirmed', 'meetingConfirmed')
-    } else if (event.field === 'handoverName' || event.field === 'handoverPhone') {
-      flags = clearFlags(state, 'handoverConfirmed', 'contactPermission', 'meetingConfirmed')
+      flags = clearFlags(state, 'addressConfirmed', 'buyerMessagePrepared', 'buyerNotified')
+    } else if (event.field === 'handoverName') {
+      flags = clearFlags(state, 'handoverConfirmed', 'contactPermission', 'buyerMessagePrepared', 'buyerNotified')
+    } else if (event.field === 'handoverPhone') {
+      flags = clearFlags(state, 'contactPermission', 'buyerMessagePrepared', 'buyerNotified')
     } else if (event.field === 'stockStatus') {
-      flags = clearFlags(state, 'stockConfirmed')
+      flags = clearFlags(state, 'stockConfirmed', 'handoverConfirmed', 'buyerMessagePrepared', 'buyerNotified')
     }
     return { ...state, fields, flags }
   }
@@ -58,13 +61,15 @@ export function transition(state: FlowState, event: FlowEvent): FlowState {
     if (event.value && !canSetFlag(state, event.flag)) return state
     return {
       ...state,
-      stage: event.flag === 'issueOpen' && event.value ? 'DX' : state.stage,
+      stage: event.flag === 'issueOpen' ? (event.value ? 'DX' : state.path === 'delivery' ? 'D0' : state.path === 'pickup' ? 'P0' : state.path === 'new' ? 'N0' : 'AFTER') : state.stage,
       flags: { ...state.flags, [event.flag]: event.value },
     }
   }
 
   if (event.type === 'set-audience') return { ...state, audience: event.audience }
-  if (event.type === 'set-stage') return canEnterStage(state, event.stage) ? { ...state, stage: event.stage } : state
+  if (event.type === 'set-stage') return canEnterStage(state, event.stage)
+    ? { ...state, stage: event.stage, ...(state.path === 'pickup' && event.stage === 'P4' ? { audience: 'buyer' as const } : {}) }
+    : state
 
   if (event.type === 'mark-review-requested') {
     if (!state.flags.reviewRequested && canRecommendReview(state)) {
@@ -82,39 +87,34 @@ export function canEnterStage(state: FlowState, target: string): boolean {
   const targetRank = Number(target.slice(prefix.length))
   if (Number.isInteger(currentRank) && Number.isInteger(targetRank) && targetRank <= currentRank) return true
   if (state.path === 'delivery') {
-    switch (target) {
-      case 'D1': return state.flags.stockConfirmed && state.flags.deliveryAvailable
-      case 'D2':
-      case 'D3': return state.flags.orderVerified
-      case 'D4': return state.flags.shippedVerified
-      case 'D5': return state.flags.arrivedVerified
-      case 'D6': return state.flags.receivedVerified
-      case 'D7': return canRecommendReview(state)
-    }
+    return /^D[0-7]$/u.test(target)
   }
   if (state.path === 'pickup') {
-    const slotReady = Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
     switch (target) {
-      case 'P1':
-      case 'P2': return slotReady
-      case 'P3': return state.flags.handoverConfirmed
-      case 'P4': return pickupConfirmationReady(state)
-      case 'P5': return state.flags.meetingConfirmed
-      case 'P6': return state.flags.handoverCompleted
+      case 'P1': return true
+      case 'P2':
+      case 'P3': return pickupSlotReady(state)
+      case 'P4': return pickupHandoverReady(state)
+      case 'P5': return state.flags.buyerNotified
+      case 'P6': return state.flags.buyerNotified
       case 'P7': return canRecommendReview(state)
     }
   }
   return state.path === 'new' ? target === 'N1' : target === 'AFTER'
 }
 
+export function pickupSlotReady(state: FlowState): boolean {
+  return state.path === 'pickup' && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
+}
+
+export function pickupHandoverReady(state: FlowState): boolean {
+  return pickupSlotReady(state) && state.flags.stockConfirmed && state.flags.handoverConfirmed
+}
+
 export function pickupConfirmationReady(state: FlowState): boolean {
-  return state.path === 'pickup'
-    && state.flags.stockConfirmed
-    && state.flags.handoverConfirmed
-    && state.flags.meetingConfirmed
+  return pickupHandoverReady(state)
     && state.flags.addressConfirmed
     && state.flags.contactPermission
-    && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
 }
 
 export function canRecommendReview(state: FlowState): boolean {
@@ -128,18 +128,18 @@ function canSetFlag(state: FlowState, flag: keyof FlowFlags): boolean {
   switch (flag) {
     case 'variantChecked': return Boolean(state.fields.variant?.trim())
     case 'stockConfirmed': return Boolean(state.fields.product?.trim())
-    case 'deliveryAvailable': return state.path === 'delivery' && state.flags.stockConfirmed
-    case 'orderVerified': return state.path === 'delivery' && state.flags.stockConfirmed && state.flags.deliveryAvailable
-    case 'shippedVerified': return state.path === 'delivery' && state.flags.orderVerified
-    case 'arrivedVerified': return state.path === 'delivery' && state.flags.shippedVerified
-    case 'receivedVerified': return (state.path === 'delivery' && state.flags.arrivedVerified) || state.path === 'after-purchase'
+    case 'deliveryAvailable': return state.path === 'delivery'
+    case 'orderVerified':
+    case 'shippedVerified':
+    case 'arrivedVerified':
+    case 'receivedVerified': return (state.path === 'delivery' && Boolean(state.fields.product?.trim())) || (flag === 'receivedVerified' && state.path === 'after-purchase')
     case 'handoverConfirmed':
-      return state.path === 'pickup' && state.flags.stockConfirmed && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
-    case 'meetingConfirmed':
-      return state.path === 'pickup' && state.flags.stockConfirmed && state.flags.handoverConfirmed && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
-    case 'addressConfirmed': return Boolean(state.fields.address?.trim())
-    case 'contactPermission': return Boolean(state.fields.handoverName?.trim() && state.fields.handoverPhone?.trim())
-    case 'handoverCompleted': return pickupConfirmationReady(state) && state.flags.meetingConfirmed
+      return state.path === 'pickup' && state.flags.stockConfirmed && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim() && state.fields.handoverName?.trim())
+    case 'buyerMessagePrepared': return pickupConfirmationReady(state)
+    case 'buyerNotified': return pickupConfirmationReady(state) && state.flags.buyerMessagePrepared
+    case 'addressConfirmed': return state.path === 'pickup' && Boolean(state.fields.address?.trim())
+    case 'contactPermission': return state.path === 'pickup' && Boolean(state.fields.handoverName?.trim() && state.fields.handoverPhone?.trim())
+    case 'handoverCompleted': return pickupConfirmationReady(state) && state.flags.buyerNotified
     default: return true
   }
 }
@@ -179,8 +179,9 @@ function reasonForGuard(flag: string): string {
     orderVerified: 'Сначала проверьте заказ в Авито.',
     shippedVerified: 'Сначала проверьте, что заказ передан в доставку.',
     receivedVerified: 'Сначала проверьте, что покупатель получил заказ.',
-    handoverConfirmed: 'Получите подтверждение человека на точке.',
-    meetingConfirmed: 'Сверьте товар, дату и время встречи.',
+    handoverConfirmed: 'Укажите человека на точке и получите подтверждение товара и времени.',
+    buyerMessagePrepared: 'Сначала подготовьте сообщение покупателю после всех проверок.',
+    buyerNotified: 'Отметьте сообщение как отправленное покупателю после фактической отправки.',
     addressConfirmed: 'Уточните адрес и отметьте его как проверенный.',
     contactPermission: 'Убедитесь, что человек разрешил передать контакт.',
     handoverCompleted: 'Отметьте фактическую передачу товара.',

@@ -212,7 +212,6 @@ export const templateCatalog: Template[] = [
       "contactPermission",
       "stockConfirmed",
       "handoverConfirmed",
-      "meetingConfirmed",
       "addressConfirmed"
     ],
     "checklist": [
@@ -1261,7 +1260,7 @@ export const templateCatalog: Template[] = [
       "Посылка прибыла"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["arrivedVerified"],
     "checklist": [
       "Проверить статус заказа."
     ],
@@ -1282,7 +1281,7 @@ export const templateCatalog: Template[] = [
       "Заказ получен"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["receivedVerified", "noIssueOpen"],
     "checklist": [],
     "defaultPriority": 145,
     "revision": 1,
@@ -2095,7 +2094,7 @@ export const templateCatalog: Template[] = [
       "Отправили"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["shippedVerified"],
     "checklist": [
       "Статус отправки подтверждён."
     ],
@@ -2116,7 +2115,7 @@ export const templateCatalog: Template[] = [
       "Прибыл в ПВЗ"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["arrivedVerified"],
     "checklist": [
       "Не отправлять при задержке в пути."
     ],
@@ -2228,10 +2227,7 @@ export const templateCatalog: Template[] = [
       "date",
       "time"
     ],
-    "guardFlags": [
-      "stockConfirmed",
-      "handoverContext"
-    ],
+    "guardFlags": ["handoverContext"],
     "checklist": [
       "Проверить фактическое наличие у выдающего."
     ],
@@ -2306,7 +2302,6 @@ export const templateCatalog: Template[] = [
       "contactPermission",
       "stockConfirmed",
       "handoverConfirmed",
-      "meetingConfirmed",
       "addressConfirmed"
     ],
     "checklist": [
@@ -2329,7 +2324,7 @@ export const templateCatalog: Template[] = [
       "Напоминание за час"
     ],
     "requiredFields": [],
-    "guardFlags": ["stockConfirmed", "handoverConfirmed", "meetingConfirmed", "addressConfirmed", "contactPermission"],
+    "guardFlags": ["stockConfirmed", "handoverConfirmed", "buyerNotified", "addressConfirmed", "contactPermission"],
     "checklist": [
       "Не отправлять, если поездка отменена."
     ],

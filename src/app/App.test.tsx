@@ -63,6 +63,7 @@ describe('app shell', () => {
   it('keeps an in-progress pickup draft while visiting Answers and returning', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /Самовывоз/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Время' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'Дата' }), { target: { value: '30 октября' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ответы' }))
     fireEvent.click(screen.getByRole('button', { name: 'Главная' }))
@@ -83,6 +84,11 @@ describe('app shell', () => {
   it('keeps the internal handover message behind an explicit audience switch', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /Самовывоз/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Время' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Товар' }), { target: { value: 'Ремешок' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Дата' }), { target: { value: '30 октября' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Время' }), { target: { value: '17:00' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Согласование' }))
     expect(screen.queryByText(/Покупатель хочет забрать/)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Человеку на точке' }))
