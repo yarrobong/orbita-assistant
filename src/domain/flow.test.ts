@@ -75,6 +75,7 @@ describe('guarded scenario state', () => {
     state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
     state = transition(state, { type: 'set-field', field: 'time', value: '17:00' })
     state = transition(state, { type: 'set-field', field: 'address', value: 'Адрес выдачи' })
+    state = transition(state, { type: 'set-field', field: 'handoverName', value: 'Мария' })
     state = transition(state, { type: 'set-field', field: 'handoverPhone', value: '+7 900 000-00-00' })
     state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
     state = transition(state, { type: 'confirm', flag: 'handoverConfirmed', value: true })
@@ -111,6 +112,16 @@ describe('guarded scenario state', () => {
     state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
     state = transition(state, { type: 'confirm', flag: 'handoverConfirmed', value: true })
     expect(state.flags.handoverConfirmed).toBe(true)
+  })
+
+  it('requires both handover name and phone before confirming permission to share the contact', () => {
+    let state = initialFlowState('pickup')
+    state = transition(state, { type: 'set-field', field: 'handoverPhone', value: '+7 900 000-00-00' })
+    state = transition(state, { type: 'confirm', flag: 'contactPermission', value: true })
+    expect(state.flags.contactPermission).toBe(false)
+    state = transition(state, { type: 'set-field', field: 'handoverName', value: 'Мария' })
+    state = transition(state, { type: 'confirm', flag: 'contactPermission', value: true })
+    expect(state.flags.contactPermission).toBe(true)
   })
 
   it('keeps stage P4 locked until product, time, handover, address and contact checks all match', () => {

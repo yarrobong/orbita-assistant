@@ -4,7 +4,7 @@ import { extname, join } from 'node:path'
 const rules = [
   { rule: 'phone', pattern: /\+?7[\s(–-]*(?:\d[\s)–-]*){10}/gu },
   { rule: 'pickup-address', pattern: /(?:Евгения\s+)?Савкова,?\s*4/giu },
-  { rule: 'handover-name', pattern: /\bЯрослав\b/giu },
+  { rule: 'handover-name', pattern: /(?<![\p{L}])Ярослав(?![\p{L}])/giu },
 ]
 
 export function auditPublicText(text) {

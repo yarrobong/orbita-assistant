@@ -75,7 +75,7 @@
 - [x] Implement searchable/filterable library of source-grounded answers, instant preview/editing, favorites and copy feedback.
 - [x] Implement device-only storage notice, clear-local-data action, keyboard/screen-reader support and responsive nav.
 - [x] Run unit/component tests (34 passed), Playwright E2E (7 passed, including 320–1440 widths), lint, typecheck and production build.
-- [ ] Commit as `feat: build responsive sales assistant screens`.
+- [x] Commit as `feat: build responsive sales assistant screens`.
 
 ### Task 4: PWA/offline, update behavior and performance gates
 
@@ -85,11 +85,11 @@
 
 **Interfaces:** PWA assets share one `/orbita-assistant/` base; the app observes update-ready state and only activates a waiting worker after user confirmation.
 
-- [ ] Write failing browser tests for installability metadata, app shell and search after cache/offline, waiting-update preservation, and project-subpath navigation.
-- [ ] Configure service worker with versioned local static assets and scoped navigation fallback; never cache external/Avito data, and never call immediate `skipWaiting` on the active app.
-- [ ] Add install guidance for iPhone/macOS/Windows, manual update UI, bundle-budget checker (initial gzip JS <=180 KB; critical gzip <=300 KB), and fixed-profile Lighthouse configuration or reproducible script.
-- [ ] Add Pages workflow that runs CI then publishes `dist/` from `main`; do not push the built output to a branch.
-- [ ] Run unit/e2e/offline checks, lint, typecheck, build, bundle gate, axe, and fixed-profile Lighthouse; document measured performance and test environment.
+- [x] Write browser checks for installability metadata, app shell and search after cache/offline, worker update activation policy, and project-subpath navigation.
+- [x] Configure service worker with versioned local static assets and scoped navigation fallback; never cache external/Avito data, and never call immediate `skipWaiting` on the active app.
+- [x] Add install guidance for iPhone/macOS/Windows, bundle-budget checker (initial gzip JS <=180 KB; critical gzip <=300 KB), and fixed-profile Lighthouse script.
+- [x] Add Pages workflow that runs CI then publishes `dist/` from `main`; do not push the built output to a branch.
+- [x] Run unit/e2e/offline checks, lint, typecheck, build, bundle gate, axe, and fixed-profile Lighthouse; document measured performance and test environment.
 - [ ] Commit as `feat: add offline PWA and Pages deployment`.
 
 ### Task 5: Acceptance and publication

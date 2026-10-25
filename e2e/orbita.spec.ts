@@ -118,6 +118,12 @@ test('home view has no WCAG A/AA axe violations', async ({ page }) => {
 
 test('service worker caches app shell and permits offline reload', async ({ page, context }) => {
   await page.goto('./#/home')
+  const manifest = await page.evaluate(async () => (await (await fetch('/orbita-assistant/manifest.webmanifest')).json()) as { start_url: string; scope: string; icons: Array<{ src: string }> })
+  expect(manifest.start_url).toBe('/orbita-assistant/')
+  expect(manifest.scope).toBe('/orbita-assistant/')
+  expect(manifest.icons).toHaveLength(2)
+  const workerText = await (await page.request.get('http://127.0.0.1:4173/orbita-assistant/sw.js')).text()
+  expect(workerText).not.toContain('skipWaiting')
   await page.evaluate(() => navigator.serviceWorker.ready)
   await page.reload()
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null)
@@ -126,4 +132,7 @@ test('service worker caches app shell and permits offline reload', async ({ page
   await expect(page.getByRole('heading', { name: 'ORBITA Assistant' })).toBeVisible()
   await page.getByRole('button', { name: 'Авито Доставка' }).click()
   await expect(page.getByRole('heading', { name: 'Авито Доставка' })).toBeVisible()
+  await page.getByRole('navigation').getByRole('button', { name: 'Ответы' }).click()
+  await page.getByRole('searchbox', { name: 'Поиск ответа' }).fill('белый геймпад')
+  await expect(page.getByRole('heading', { name: 'Есть белые геймпады Xbox' })).toBeVisible()
 })

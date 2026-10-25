@@ -197,13 +197,14 @@ export const templateCatalog: Template[] = [
     "category": "pickup",
     "stage": "TOP",
     "audience": "buyer",
-    "body": "Отлично, самовывоз подтвердили на {{date}} в {{time}}. Адрес: адрес, который сообщу после подтверждения встречи. Товар выдаст {{handoverName}}, {{handoverPhone}}. Пожалуйста, предупредите минимум за час до приезда. Если планы изменятся — напишите заранее.",
+    "body": "Отлично, самовывоз подтвердили на {{date}} в {{time}}. Адрес: {{address}}. Товар выдаст {{handoverName}}, {{handoverPhone}}. Пожалуйста, предупредите минимум за час до приезда. Если планы изменятся — напишите заранее.",
     "tags": [
       "Самовывоз подтверждён"
     ],
     "requiredFields": [
       "date",
       "time",
+      "address",
       "handoverName",
       "handoverPhone"
     ],
@@ -1125,12 +1126,13 @@ export const templateCatalog: Template[] = [
     "category": "delivery",
     "stage": "R",
     "audience": "buyer",
-    "body": "Товар выдаст Ярослав, телефон: {{handoverPhone}}. Пожалуйста, согласуйте время заранее и предупредите его минимум за час до приезда.",
+    "body": "Товар выдаст {{handoverName}}, телефон: {{handoverPhone}}. Пожалуйста, согласуйте время заранее и предупредите его минимум за час до приезда.",
     "tags": [
       "Доставка",
       "Контакт выдачи"
     ],
     "requiredFields": [
+      "handoverName",
       "handoverPhone"
     ],
     "guardFlags": [

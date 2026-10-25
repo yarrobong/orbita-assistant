@@ -5,14 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/generate-icons.mjs && vite build && node scripts/write-sw.mjs",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "audit:public": "node scripts/audit-public-data.mjs src/data public dist"
+    "test:e2e": "npm run build && playwright test",
+    "audit:public": "node scripts/audit-public-data.mjs src/data public dist",
+    "audit:budget": "node scripts/audit-budget.mjs",
+    "audit:lighthouse": "npm run build && node scripts/run-lighthouse.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

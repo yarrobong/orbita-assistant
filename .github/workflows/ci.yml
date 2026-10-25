@@ -20,3 +20,7 @@ jobs:
       - run: npm run test
       - run: npm run build
       - run: npm run audit:public
+      - run: npm run audit:budget
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e
+      - run: npm run audit:lighthouse

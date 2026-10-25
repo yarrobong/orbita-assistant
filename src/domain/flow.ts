@@ -138,7 +138,7 @@ function canSetFlag(state: FlowState, flag: keyof FlowFlags): boolean {
     case 'meetingConfirmed':
       return state.path === 'pickup' && state.flags.stockConfirmed && state.flags.handoverConfirmed && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
     case 'addressConfirmed': return Boolean(state.fields.address?.trim())
-    case 'contactPermission': return Boolean(state.fields.handoverPhone?.trim())
+    case 'contactPermission': return Boolean(state.fields.handoverName?.trim() && state.fields.handoverPhone?.trim())
     case 'handoverCompleted': return pickupConfirmationReady(state) && state.flags.meetingConfirmed
     default: return true
   }
