@@ -13,7 +13,8 @@ export const templateCatalog: Template[] = [
     ],
     "requiredFields": [],
     "guardFlags": [
-      "stockConfirmed"
+      "stockConfirmed",
+      "stockAvailable"
     ],
     "checklist": [
       "Наличие обязательно проверить."
@@ -54,7 +55,7 @@ export const templateCatalog: Template[] = [
       "Заказ оформлен"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["orderVerified"],
     "checklist": [
       "Проверить, что заказ получен."
     ],
@@ -94,7 +95,7 @@ export const templateCatalog: Template[] = [
       "Заказ отправили"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["shippedVerified"],
     "checklist": [
       "Статус действительно «отправлен»."
     ],
@@ -114,7 +115,7 @@ export const templateCatalog: Template[] = [
       "Заказ в пункте выдачи"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["arrivedVerified"],
     "checklist": [
       "Проверить статус; не навязываться."
     ],
@@ -232,9 +233,7 @@ export const templateCatalog: Template[] = [
       "Время не подошло"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed"
-    ],
+    "guardFlags": ["arrivedVerified"],
     "checklist": [
       "Не предлагать несогласованный слот."
     ],
@@ -254,10 +253,7 @@ export const templateCatalog: Template[] = [
       "Другой цвет"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed",
-      "compatibilityChecked"
-    ],
+    "guardFlags": ["stockConfirmed", "stockUnavailable", "stockAvailable", "variantChecked", "compatibilityChecked"],
     "checklist": [
       "Проверить белый вариант и совместимость."
     ],
@@ -343,9 +339,7 @@ export const templateCatalog: Template[] = [
       "Товар в наличии"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed"
-    ],
+    "guardFlags": ["stockConfirmed", "stockAvailable"],
     "checklist": [
       "Проверить наличие."
     ],
@@ -477,9 +471,7 @@ export const templateCatalog: Template[] = [
     "requiredFields": [
       "alternative"
     ],
-    "guardFlags": [
-      "stockConfirmed"
-    ],
+    "guardFlags": ["stockConfirmed", "stockUnavailable"],
     "checklist": [
       "Уточнить наличие замены."
     ],
@@ -500,9 +492,7 @@ export const templateCatalog: Template[] = [
       "Есть белые геймпады Xbox"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed"
-    ],
+    "guardFlags": ["stockConfirmed", "stockUnavailable", "stockAvailable", "variantChecked"],
     "checklist": [
       "Проверить остаток."
     ],
@@ -672,9 +662,7 @@ export const templateCatalog: Template[] = [
       "Quest 3 или Quest 3S"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed"
-    ],
+    "guardFlags": ["stockConfirmed", "stockAvailable", "stockUnavailable", "variantChecked"],
     "checklist": [],
     "defaultPriority": 116,
     "revision": 1,
@@ -824,7 +812,8 @@ export const templateCatalog: Template[] = [
     ],
     "requiredFields": [],
     "guardFlags": [
-      "stockConfirmed"
+      "stockConfirmed",
+      "stockAvailable"
     ],
     "checklist": [
       "Проверить наличие."
@@ -890,9 +879,7 @@ export const templateCatalog: Template[] = [
       "Несколько экземпляров"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed"
-    ],
+    "guardFlags": ["stockConfirmed", "stockAvailable"],
     "checklist": [
       "Проверить текущий остаток."
     ],
@@ -1487,9 +1474,7 @@ export const templateCatalog: Template[] = [
       "Товар в наличии?"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed"
-    ],
+    "guardFlags": [],
     "checklist": [
       "Не подтверждает остатки автоматически"
     ],
@@ -2171,7 +2156,7 @@ export const templateCatalog: Template[] = [
       "Спасибо после доставки"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["receivedVerified", "noIssueOpen"],
     "checklist": [
       "Убедиться, что заказ действительно получен."
     ],
@@ -2303,7 +2288,7 @@ export const templateCatalog: Template[] = [
     "category": "pickup",
     "stage": "САМОВЫВОЗ",
     "audience": "buyer",
-    "body": "Самовывоз подтвердили на {{date}} в {{time}}. Адрес: адрес, который сообщу после подтверждения встречи. Товар выдаст {{handoverName}}, телефон {{handoverPhone}}. Пожалуйста, предупредите минимум за час до приезда. Если планы изменятся — напишите заранее.",
+    "body": "Самовывоз подтвердили на {{date}} в {{time}}. Адрес: {{address}}. Товар выдаст {{handoverName}}, телефон {{handoverPhone}}. Пожалуйста, предупредите минимум за час до приезда. Если планы изменятся — напишите заранее.",
     "tags": [
       "САМОВЫВОЗ",
       "Встреча подтверждена"
@@ -2311,6 +2296,7 @@ export const templateCatalog: Template[] = [
     "requiredFields": [
       "date",
       "time",
+      "address",
       "handoverName",
       "handoverPhone"
     ],
@@ -2341,7 +2327,7 @@ export const templateCatalog: Template[] = [
       "Напоминание за час"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["stockConfirmed", "handoverConfirmed", "meetingConfirmed", "addressConfirmed", "contactPermission"],
     "checklist": [
       "Не отправлять, если поездка отменена."
     ],
@@ -2406,7 +2392,7 @@ export const templateCatalog: Template[] = [
       "После передачи товара"
     ],
     "requiredFields": [],
-    "guardFlags": [],
+    "guardFlags": ["handoverCompleted"],
     "checklist": [
       "Товар действительно передан."
     ],

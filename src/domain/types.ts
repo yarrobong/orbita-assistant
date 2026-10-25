@@ -5,11 +5,12 @@ export type SourceCollection = 'Топ-15' | 'Все ответы' | 'Автоо
 
 export type FlagName =
   | 'stockConfirmed' | 'deliveryAvailable' | 'orderVerified' | 'shippedVerified'
-  | 'receivedVerified' | 'handoverConfirmed' | 'meetingConfirmed' | 'addressConfirmed'
+  | 'arrivedVerified' | 'receivedVerified' | 'handoverConfirmed' | 'meetingConfirmed' | 'addressConfirmed'
   | 'contactPermission' | 'handoverCompleted' | 'reviewRequested' | 'issueOpen'
-  | 'compatibilityChecked' | 'priceConfirmed' | 'termsConfirmed'
+  | 'compatibilityChecked' | 'variantChecked' | 'priceConfirmed' | 'termsConfirmed'
 
 export type GuardFlag = FlagName | 'noIssueOpen' | 'reviewNotRequested' | 'handoverContext'
+  | 'stockAvailable' | 'stockUnavailable'
 
 export type Template = {
   id: string

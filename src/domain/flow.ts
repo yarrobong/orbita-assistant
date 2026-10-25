@@ -5,6 +5,7 @@ export const emptyFlags = (): FlowFlags => ({
   deliveryAvailable: false,
   orderVerified: false,
   shippedVerified: false,
+  arrivedVerified: false,
   receivedVerified: false,
   handoverConfirmed: false,
   meetingConfirmed: false,
@@ -14,6 +15,7 @@ export const emptyFlags = (): FlowFlags => ({
   reviewRequested: false,
   issueOpen: false,
   compatibilityChecked: false,
+  variantChecked: false,
   priceConfirmed: false,
   termsConfirmed: false,
 })
@@ -37,24 +39,32 @@ export function transition(state: FlowState, event: FlowEvent): FlowState {
     const fields = { ...state.fields, [event.field]: event.value }
     let flags = state.flags
     if (event.field === 'product' || event.field === 'variant') {
-      flags = clearFlags(state, 'stockConfirmed', 'deliveryAvailable', 'orderVerified', 'shippedVerified', 'receivedVerified', 'compatibilityChecked', 'handoverConfirmed', 'meetingConfirmed', 'addressConfirmed', 'contactPermission', 'handoverCompleted')
+      flags = clearFlags(state, 'stockConfirmed', 'deliveryAvailable', 'orderVerified', 'shippedVerified', 'arrivedVerified', 'receivedVerified', 'compatibilityChecked', 'variantChecked', 'handoverConfirmed', 'meetingConfirmed', 'addressConfirmed', 'contactPermission', 'handoverCompleted')
+      delete fields.stockStatus
+      if (event.field === 'product') delete fields.variant
     } else if (event.field === 'date' || event.field === 'time') {
       flags = clearFlags(state, 'handoverConfirmed', 'meetingConfirmed', 'handoverCompleted')
     } else if (event.field === 'address') {
       flags = clearFlags(state, 'addressConfirmed', 'meetingConfirmed')
     } else if (event.field === 'handoverName' || event.field === 'handoverPhone') {
       flags = clearFlags(state, 'handoverConfirmed', 'contactPermission', 'meetingConfirmed')
+    } else if (event.field === 'stockStatus') {
+      flags = clearFlags(state, 'stockConfirmed')
     }
     return { ...state, fields, flags }
   }
 
   if (event.type === 'confirm') {
     if (event.value && !canSetFlag(state, event.flag)) return state
-    return { ...state, flags: { ...state.flags, [event.flag]: event.value } }
+    return {
+      ...state,
+      stage: event.flag === 'issueOpen' && event.value ? 'DX' : state.stage,
+      flags: { ...state.flags, [event.flag]: event.value },
+    }
   }
 
   if (event.type === 'set-audience') return { ...state, audience: event.audience }
-  if (event.type === 'set-stage') return { ...state, stage: event.stage }
+  if (event.type === 'set-stage') return canEnterStage(state, event.stage) ? { ...state, stage: event.stage } : state
 
   if (event.type === 'mark-review-requested') {
     if (!state.flags.reviewRequested && canRecommendReview(state)) {
@@ -62,6 +72,49 @@ export function transition(state: FlowState, event: FlowEvent): FlowState {
     }
   }
   return state
+}
+
+export function canEnterStage(state: FlowState, target: string): boolean {
+  if (target === 'DX') return true
+  const prefix = state.path === 'delivery' ? 'D' : state.path === 'pickup' ? 'P' : state.path === 'new' ? 'N' : 'AFTER'
+  if (!target.startsWith(prefix)) return false
+  const currentRank = Number(state.stage.slice(prefix.length))
+  const targetRank = Number(target.slice(prefix.length))
+  if (Number.isInteger(currentRank) && Number.isInteger(targetRank) && targetRank <= currentRank) return true
+  if (state.path === 'delivery') {
+    switch (target) {
+      case 'D1': return state.flags.stockConfirmed && state.flags.deliveryAvailable
+      case 'D2':
+      case 'D3': return state.flags.orderVerified
+      case 'D4': return state.flags.shippedVerified
+      case 'D5': return state.flags.arrivedVerified
+      case 'D6': return state.flags.receivedVerified
+      case 'D7': return canRecommendReview(state)
+    }
+  }
+  if (state.path === 'pickup') {
+    const slotReady = Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
+    switch (target) {
+      case 'P1':
+      case 'P2': return slotReady
+      case 'P3': return state.flags.handoverConfirmed
+      case 'P4': return pickupConfirmationReady(state)
+      case 'P5': return state.flags.meetingConfirmed
+      case 'P6': return state.flags.handoverCompleted
+      case 'P7': return canRecommendReview(state)
+    }
+  }
+  return state.path === 'new' ? target === 'N1' : target === 'AFTER'
+}
+
+export function pickupConfirmationReady(state: FlowState): boolean {
+  return state.path === 'pickup'
+    && state.flags.stockConfirmed
+    && state.flags.handoverConfirmed
+    && state.flags.meetingConfirmed
+    && state.flags.addressConfirmed
+    && state.flags.contactPermission
+    && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
 }
 
 export function canRecommendReview(state: FlowState): boolean {
@@ -73,18 +126,20 @@ export function canRecommendReview(state: FlowState): boolean {
 
 function canSetFlag(state: FlowState, flag: keyof FlowFlags): boolean {
   switch (flag) {
+    case 'variantChecked': return Boolean(state.fields.variant?.trim())
     case 'stockConfirmed': return Boolean(state.fields.product?.trim())
     case 'deliveryAvailable': return state.path === 'delivery' && state.flags.stockConfirmed
     case 'orderVerified': return state.path === 'delivery' && state.flags.stockConfirmed && state.flags.deliveryAvailable
     case 'shippedVerified': return state.path === 'delivery' && state.flags.orderVerified
-    case 'receivedVerified': return state.path === 'delivery' && state.flags.shippedVerified
+    case 'arrivedVerified': return state.path === 'delivery' && state.flags.shippedVerified
+    case 'receivedVerified': return (state.path === 'delivery' && state.flags.arrivedVerified) || state.path === 'after-purchase'
     case 'handoverConfirmed':
       return state.path === 'pickup' && state.flags.stockConfirmed && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
     case 'meetingConfirmed':
       return state.path === 'pickup' && state.flags.stockConfirmed && state.flags.handoverConfirmed && Boolean(state.fields.product?.trim() && state.fields.date?.trim() && state.fields.time?.trim())
     case 'addressConfirmed': return Boolean(state.fields.address?.trim())
     case 'contactPermission': return Boolean(state.fields.handoverPhone?.trim())
-    case 'handoverCompleted': return state.path === 'pickup' && state.flags.meetingConfirmed && state.flags.handoverConfirmed
+    case 'handoverCompleted': return pickupConfirmationReady(state) && state.flags.meetingConfirmed
     default: return true
   }
 }
@@ -101,6 +156,9 @@ export function canUseTemplate(template: Template, state: FlowState): GuardResul
       case 'noIssueOpen': passed = !state.flags.issueOpen; break
       case 'reviewNotRequested': passed = !state.flags.reviewRequested; break
       case 'handoverContext': passed = state.path === 'pickup' && state.audience === 'handover'; break
+      case 'stockAvailable': passed = state.flags.stockConfirmed && ['available', 'mixed'].includes(state.fields.stockStatus ?? ''); break
+      case 'stockUnavailable': passed = state.flags.stockConfirmed && ['unavailable', 'mixed'].includes(state.fields.stockStatus ?? ''); break
+      case 'variantChecked': passed = state.flags.variantChecked; break
       case 'receivedVerified': passed = state.path === 'pickup' ? state.flags.handoverCompleted : state.flags.receivedVerified; break
       default: passed = state.flags[guard]
     }
@@ -128,6 +186,9 @@ function reasonForGuard(flag: string): string {
     handoverCompleted: 'Отметьте фактическую передачу товара.',
     reviewRequested: 'Просьба об отзыве для этого сценария уже отмечена.',
     issueOpen: 'Сначала разберитесь с проблемой покупателя.',
+    stockAvailable: 'Отметьте, что нужный вариант точно есть в наличии.',
+    stockUnavailable: 'Отметьте, что нужного варианта действительно нет.',
+    variantChecked: 'Проверьте остаток именно нужного цвета или варианта.',
     compatibilityChecked: 'Проверьте совместимость конкретной модели.',
     priceConfirmed: 'Сверьте цену или скидку перед отправкой.',
     termsConfirmed: 'Сверьте условия гарантии или возврата.',

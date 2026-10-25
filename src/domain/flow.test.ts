@@ -24,6 +24,7 @@ function markDeliveryReceived() {
   state = transition(state, { type: 'confirm', flag: 'deliveryAvailable', value: true })
   state = transition(state, { type: 'confirm', flag: 'orderVerified', value: true })
   state = transition(state, { type: 'confirm', flag: 'shippedVerified', value: true })
+  state = transition(state, { type: 'confirm', flag: 'arrivedVerified', value: true })
   return transition(state, { type: 'confirm', flag: 'receivedVerified', value: true })
 }
 
@@ -73,9 +74,13 @@ describe('guarded scenario state', () => {
     state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок' })
     state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
     state = transition(state, { type: 'set-field', field: 'time', value: '17:00' })
+    state = transition(state, { type: 'set-field', field: 'address', value: 'Адрес выдачи' })
+    state = transition(state, { type: 'set-field', field: 'handoverPhone', value: '+7 900 000-00-00' })
     state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
     state = transition(state, { type: 'confirm', flag: 'handoverConfirmed', value: true })
     state = transition(state, { type: 'confirm', flag: 'meetingConfirmed', value: true })
+    state = transition(state, { type: 'confirm', flag: 'addressConfirmed', value: true })
+    state = transition(state, { type: 'confirm', flag: 'contactPermission', value: true })
     state = transition(state, { type: 'confirm', flag: 'handoverCompleted', value: true })
     expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
   })
@@ -91,6 +96,7 @@ describe('guarded scenario state', () => {
     expect(state.flags.receivedVerified).toBe(false)
     state = transition(state, { type: 'confirm', flag: 'orderVerified', value: true })
     state = transition(state, { type: 'confirm', flag: 'shippedVerified', value: true })
+    state = transition(state, { type: 'confirm', flag: 'arrivedVerified', value: true })
     state = transition(state, { type: 'confirm', flag: 'receivedVerified', value: true })
     expect(state.flags.receivedVerified).toBe(true)
   })
@@ -107,6 +113,35 @@ describe('guarded scenario state', () => {
     expect(state.flags.handoverConfirmed).toBe(true)
   })
 
+  it('keeps stage P4 locked until product, time, handover, address and contact checks all match', () => {
+    let state = initialFlowState('pickup')
+    state = transition(state, { type: 'set-stage', stage: 'P4' })
+    expect(state.stage).toBe('P0')
+    state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок' })
+    state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
+    state = transition(state, { type: 'set-field', field: 'time', value: '17:00' })
+    state = transition(state, { type: 'set-field', field: 'address', value: 'Адрес на устройстве' })
+    state = transition(state, { type: 'set-field', field: 'handoverName', value: 'Локально' })
+    state = transition(state, { type: 'set-field', field: 'handoverPhone', value: '+7 900 000-00-00' })
+    for (const flag of ['stockConfirmed', 'handoverConfirmed', 'meetingConfirmed', 'addressConfirmed', 'contactPermission'] as const) {
+      state = transition(state, { type: 'confirm', flag, value: true })
+    }
+    state = transition(state, { type: 'set-stage', stage: 'P4' })
+    expect(state.stage).toBe('P4')
+  })
+
+  it('requires verified arrival and receipt before delivery reaches D6 or D7', () => {
+    let state = initialFlowState('delivery')
+    state = transition(state, { type: 'set-stage', stage: 'D6' })
+    expect(state.stage).toBe('D0')
+    state = transition(state, { type: 'set-field', field: 'product', value: 'Геймпад' })
+    for (const flag of ['stockConfirmed', 'deliveryAvailable', 'orderVerified', 'shippedVerified', 'arrivedVerified', 'receivedVerified'] as const) {
+      state = transition(state, { type: 'confirm', flag, value: true })
+    }
+    state = transition(state, { type: 'set-stage', stage: 'D7' })
+    expect(state.stage).toBe('D7')
+  })
+
   it('resets stock and handover checks when the product changes', () => {
     let state = initialFlowState('pickup')
     state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок' })
@@ -116,6 +151,22 @@ describe('guarded scenario state', () => {
     expect(state.flags.stockConfirmed).toBe(false)
     expect(state.flags.handoverConfirmed).toBe(false)
     expect(state.fields.product).toBe('Другой товар')
+  })
+
+  it('distinguishes a checked in-stock item from an unchecked or unavailable item', () => {
+    const available: Template = { ...pickupConfirmation, guardFlags: ['stockConfirmed', 'stockAvailable'], requiredFields: [] }
+    const unavailable: Template = { ...pickupConfirmation, guardFlags: ['stockConfirmed', 'stockUnavailable'], requiredFields: [] }
+    let state = initialFlowState('new')
+    state = transition(state, { type: 'set-field', field: 'product', value: 'Геймпад' })
+    expect(canUseTemplate(available, state).allowed).toBe(false)
+    state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'available' })
+    expect(canUseTemplate(available, state).allowed).toBe(false)
+    state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
+    expect(canUseTemplate(available, state).allowed).toBe(true)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
+    state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'unavailable' })
+    expect(state.flags.stockConfirmed).toBe(false)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
   })
 
   it('keeps internal handover copy unavailable in the buyer audience', () => {

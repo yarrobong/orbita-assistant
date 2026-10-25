@@ -1,6 +1,7 @@
 import type { Template, TemplateCategory } from '../domain/types'
 
 const synonymGroups: string[][] = [
+  ['белый', 'белые', 'белом', 'белого', 'белую'],
   ['доставка', 'отправить', 'отправка', 'авито'],
   ['самовывоз', 'забрать', 'приехать'],
   ['отзыв', 'оценка', 'отозваться'],
@@ -9,7 +10,7 @@ const synonymGroups: string[][] = [
 ]
 
 function normalize(value: string): string {
-  return value.toLocaleLowerCase('ru-RU').replaceAll('ё', 'е').replace(/[^p{L}p{N}]+/gu, ' ').trim()
+  return value.toLocaleLowerCase('ru-RU').replaceAll('ё', 'е').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
 }
 
 function queryGroups(query: string): string[][] {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderTemplate } from './render-template'
 import { templateCatalog } from '../data/templates'
 import { searchTemplates } from '../lib/search'
+import { canUseTemplate, initialFlowState, transition } from './flow'
 
 describe('source-grounded template catalog', () => {
   it('contains the original base answer set and keeps private pickup details out', () => {
@@ -22,6 +23,19 @@ describe('source-grounded template catalog', () => {
     const request = templateCatalog.find((item) => item.id === 'scenario-23')!
     expect(thankYou.guardFlags).not.toContain('reviewNotRequested')
     expect(request.guardFlags).toContain('reviewNotRequested')
+  })
+
+  it('does not expose in-stock or out-of-stock claims until that exact status is confirmed', () => {
+    const available = templateCatalog.find((item) => item.id === 'R01')!
+    const unavailable = templateCatalog.find((item) => item.id === 'R07')!
+    let state = initialFlowState('new')
+    expect(canUseTemplate(available, state).allowed).toBe(false)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
+    state = transition(state, { type: 'set-field', field: 'product', value: 'Геймпад' })
+    state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'available' })
+    state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
+    expect(canUseTemplate(available, state).allowed).toBe(true)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
   })
 
   it.each([

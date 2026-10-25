@@ -12,8 +12,8 @@ const allowedCategories = new Set<TemplateCategory>([
 const allowedFlags = new Set([
   'stockConfirmed', 'deliveryAvailable', 'orderVerified', 'shippedVerified', 'receivedVerified',
   'handoverConfirmed', 'meetingConfirmed', 'addressConfirmed', 'contactPermission', 'handoverCompleted',
-  'reviewRequested', 'issueOpen', 'compatibilityChecked', 'priceConfirmed', 'termsConfirmed',
-  'noIssueOpen', 'reviewNotRequested', 'handoverContext',
+  'reviewRequested', 'issueOpen', 'compatibilityChecked', 'variantChecked', 'priceConfirmed', 'termsConfirmed',
+  'stockAvailable', 'stockUnavailable', 'noIssueOpen', 'reviewNotRequested', 'handoverContext',
 ])
 const forbiddenKeyPattern = /(?:customer|buyer.?name|buyer.?phone|conversation|password|secret|api.?key|access.?token)/iu
 const stringArrays = ['tags', 'requiredFields', 'guardFlags', 'checklist'] as const

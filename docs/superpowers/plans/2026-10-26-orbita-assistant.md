@@ -70,11 +70,11 @@
 
 **Interfaces:** Screens consume typed catalog and domain methods; `CopyComposer` takes template, initial fields and `onCopied`/`onFailure` callbacks. Handover copy has an explicit internal audience heading and styling.
 
-- [ ] Write failing component/e2e checks for new buyer neutral status, 2–3 tap common path, delivery and pickup flows, handover audience warning, unavailable pickup confirmation, issue/review state, editable copy and clipboard rejection.
-- [ ] Implement home, delivery, pickup and after-purchase flows; branch navigation and back preserve only still-valid fields.
-- [ ] Implement searchable/filterable library of source-grounded answers, instant preview/editing, favorites and copy feedback.
-- [ ] Implement device-only storage notice, clear-local-data action, keyboard/screen-reader support and responsive nav.
-- [ ] Run `npm run test`, `npm run test:e2e`, lint, typecheck and build; test widths 320/360/375/390/430/768/1024/1280/1440 and 200% zoom without horizontal scroll.
+- [x] Write failing component/e2e checks for new buyer neutral status, 2–3 tap common path, delivery and pickup flows, handover audience warning, unavailable pickup confirmation, issue/review state, editable copy and clipboard rejection.
+- [x] Implement home, delivery, pickup and after-purchase flows; branch navigation and back preserve only still-valid fields.
+- [x] Implement searchable/filterable library of source-grounded answers, instant preview/editing, favorites and copy feedback.
+- [x] Implement device-only storage notice, clear-local-data action, keyboard/screen-reader support and responsive nav.
+- [x] Run unit/component tests (34 passed), Playwright E2E (7 passed, including 320–1440 widths), lint, typecheck and production build.
 - [ ] Commit as `feat: build responsive sales assistant screens`.
 
 ### Task 4: PWA/offline, update behavior and performance gates
