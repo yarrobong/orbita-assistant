@@ -13,6 +13,9 @@ const revision = revisionHash.digest('hex').slice(0, 10)
 const worker = `const CACHE = 'orbita-shell-${revision}'
 const APP_BASE = '${base}'
 const STATIC_FILES = ${JSON.stringify(staticFiles)}
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'ACTIVATE_UPDATE') self.skipWaiting()
+})
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC_FILES)))
 })

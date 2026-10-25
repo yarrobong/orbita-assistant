@@ -74,7 +74,7 @@
 - [x] Implement home, delivery, pickup and after-purchase flows; branch navigation and back preserve only still-valid fields.
 - [x] Implement searchable/filterable library of source-grounded answers, instant preview/editing, favorites and copy feedback.
 - [x] Implement device-only storage notice, clear-local-data action, keyboard/screen-reader support and responsive nav.
-- [x] Run unit/component tests (35 passed), Playwright E2E (9 passed, including 320–1440 widths and offline inventory checks), lint, typecheck and production build.
+- [x] Run unit/component tests (36 passed), Playwright E2E (9 passed, including 320–1440 widths and offline inventory checks), lint, typecheck and production build.
 - [x] Commit as `feat: build responsive sales assistant screens`.
 
 ### Task 4: PWA/offline, update behavior and performance gates
@@ -86,11 +86,11 @@
 **Interfaces:** PWA assets share one `/orbita-assistant/` base; the app observes update-ready state and only activates a waiting worker after user confirmation.
 
 - [x] Write browser checks for installability metadata, app shell and search after cache/offline, worker update activation policy, and project-subpath navigation.
-- [x] Configure service worker with versioned local static assets and scoped navigation fallback; never cache external/Avito data, and never call immediate `skipWaiting` on the active app.
+- [x] Configure service worker with versioned local static assets and scoped navigation fallback; never cache external/Avito data, and only call `skipWaiting` after explicit user action.
 - [x] Add install guidance for iPhone/macOS/Windows, bundle-budget checker (initial gzip JS <=180 KB; critical gzip <=300 KB), and fixed-profile Lighthouse script.
 - [x] Add Pages workflow that runs CI then publishes `dist/` from `main`; do not push the built output to a branch.
 - [x] Run unit/e2e/offline checks, lint, typecheck, build, bundle gate, axe, and fixed-profile Lighthouse; document measured performance and test environment.
-- [ ] Commit as `feat: add offline PWA and Pages deployment`.
+- [x] Commit as `feat: add offline PWA and Pages deployment`.
 
 ### Task 5: Acceptance and publication
 
@@ -98,12 +98,12 @@
 
 **Files:** `README.md`, `docs/acceptance.md`, all relevant domain/e2e tests.
 
-- [ ] Run all 12 P0 regression scenarios in the source specification, including invalid import and update preservation.
-- [ ] Review production output for private contact/address, names, buyer content, tokens, external network resources, and unsafe unconditional claims; fix and rerun audit on every change.
-- [ ] Run production build locally and verify Pages prefix and hash deep links with a local static server.
-- [ ] Check GitHub repository availability/permissions; publish only to the specified repository if available and configure GitHub Pages Actions. Verify the completed deployment URL by loading it and exercising the app shell.
-- [ ] Record unmet platform tests (physical iPhone, macOS and Windows) honestly if no devices are available; provide browser test evidence and a reproducible manual checklist.
-- [ ] Commit as `docs: record ORBITA P0 acceptance` after checks; ensure clean working tree.
+- [x] Run all 12 P0 regression scenarios across unit, component, browser, and production checks, including invalid import and update preservation across reload.
+- [x] Review production output for private contact/address, names, buyer content, tokens, external network resources, and unsafe unconditional claims; fix and rerun audit on every change.
+- [x] Run production build locally and verify Pages prefix and hash deep links with a local static server.
+- [x] Check GitHub repository availability/permissions; publish only to the specified repository if available and configure GitHub Pages Actions. Verify the completed deployment URL by loading it and exercising the app shell.
+- [x] Record unmet platform tests (physical iPhone, macOS and Windows) honestly where devices are unavailable; provide browser test evidence and a reproducible manual checklist.
+- [x] Commit acceptance evidence after checks; ensure clean working tree.
 
 ## Completion Contract
 

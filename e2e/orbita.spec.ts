@@ -4,7 +4,10 @@ import AxeBuilder from '@axe-core/playwright'
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text: string) => { (window as Window & { __copied?: string }).__copied = text } } })
-    localStorage.clear()
+    if (sessionStorage.getItem('orbita:e2e-initialized') !== 'true') {
+      localStorage.clear()
+      sessionStorage.setItem('orbita:e2e-initialized', 'true')
+    }
   })
 })
 
@@ -137,8 +140,9 @@ test('service worker caches app shell and permits offline reload', async ({ page
   expect(manifest.start_url).toBe('/orbita-assistant/')
   expect(manifest.scope).toBe('/orbita-assistant/')
   expect(manifest.icons).toHaveLength(2)
+  await expect(page.locator('meta[name="apple-mobile-web-app-capable"]')).toHaveAttribute('content', 'yes')
   const workerText = await (await page.request.get('http://127.0.0.1:4173/orbita-assistant/sw.js')).text()
-  expect(workerText).not.toContain('skipWaiting')
+  expect(workerText).toMatch(/addEventListener\('message',[\s\S]*event\.data\?\.type === 'ACTIVATE_UPDATE'\) self\.skipWaiting\(\)/u)
   await page.evaluate(() => navigator.serviceWorker.ready)
   await page.reload()
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null)
@@ -150,4 +154,9 @@ test('service worker caches app shell and permits offline reload', async ({ page
   await page.getByRole('navigation').getByRole('button', { name: 'Ответы' }).click()
   await page.getByRole('searchbox', { name: 'Поиск ответа' }).fill('белый геймпад')
   await expect(page.getByRole('heading', { name: 'Есть белые геймпады Xbox' })).toBeVisible()
+  await page.getByRole('button', { name: 'Добавить «Есть белые геймпады Xbox» в избранное' }).click()
+  await expect(page.getByRole('button', { name: 'Убрать «Есть белые геймпады Xbox» из избранного' })).toBeVisible()
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('orbita:favorites'))).toContain('"R08"')
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Убрать «Есть белые геймпады Xbox» из избранного' })).toBeVisible()
 })

@@ -52,6 +52,7 @@ function AppShell() {
   const [favorites, setFavorites] = useState(safeReadFavorites)
   const [lastScenario, setLastScenario] = useState<LastScenario | null>(safeReadLastScenario)
   const [selectedTemplate, setSelectedTemplate] = useState('')
+  const [updateWorker, setUpdateWorker] = useState<ServiceWorker | null>(null)
   useEffect(() => {
     const sync = () => setRoute(pathFromHash())
     window.addEventListener('hashchange', sync)
@@ -59,6 +60,34 @@ function AppShell() {
   }, [])
   useEffect(() => { localStorage.setItem('orbita:favorites', JSON.stringify(favorites)) }, [favorites])
   useEffect(() => { if (lastScenario) localStorage.setItem('orbita:last-scenario', JSON.stringify(lastScenario)) }, [lastScenario])
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    let registration: ServiceWorkerRegistration | undefined
+    let disposed = false
+    let controlledAtStart = navigator.serviceWorker.controller !== null
+    const onControllerChange = () => {
+      if (controlledAtStart) window.location.reload()
+      controlledAtStart = true
+    }
+    const onWorkerStateChange = (event: Event) => {
+      const worker = event.currentTarget as ServiceWorker
+      if (worker.state === 'installed' && navigator.serviceWorker.controller) setUpdateWorker(registration?.waiting ?? worker)
+    }
+    const onUpdateFound = () => registration?.installing?.addEventListener('statechange', onWorkerStateChange)
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+    void navigator.serviceWorker.ready.then((readyRegistration) => {
+      if (disposed) return
+      registration = readyRegistration
+      if (registration.waiting) setUpdateWorker(registration.waiting)
+      registration.addEventListener('updatefound', onUpdateFound)
+      if (navigator.onLine) void registration.update().catch(() => undefined)
+    }).catch(() => undefined)
+    return () => {
+      disposed = true
+      registration?.removeEventListener('updatefound', onUpdateFound)
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+    }
+  }, [])
 
   const navigate = (next: string) => { window.location.hash = `/${next}`; setRoute(next) }
   const open = (id: string) => {
@@ -82,6 +111,7 @@ function AppShell() {
     <div className="workspace"><header className="topbar"><div className="mobile-brand"><span className="brand-mark" aria-hidden="true">O</span><strong>ORBITA Assistant</strong></div>
       <form className="search-form" role="search" onSubmit={handleGlobalSearch}><span aria-hidden="true" className="search-icon">⌕</span><input aria-label="Быстрый поиск" placeholder="Что нужно ответить?" type="search" value={query} onChange={(event) => setQuery(event.target.value)} /><kbd aria-hidden="true">⌘ K</kbd></form>
       <button className="settings-button" aria-label="Настройки" type="button" onClick={() => navigate('settings')}>⚙</button></header>
+      {updateWorker && <aside className="update-notice" role="status"><p>Доступно обновление. Скопируйте введённый текст перед перезапуском.</p><button className="button button-primary" type="button" onClick={() => updateWorker.postMessage({ type: 'ACTIVATE_UPDATE' })}>Обновить приложение</button><button className="update-dismiss" type="button" onClick={() => setUpdateWorker(null)}>Позже</button></aside>}
       <main className="main-content">
         {route === 'home' && <HomeScreen onOpen={open} lastScenario={lastScenario} onContinue={() => { if (lastScenario) navigate(`flow/${lastScenario.path}`) }} />}
         {route === 'flows' && <section><header className="page-heading"><p className="eyebrow">БЫСТРЫЙ СТАРТ</p><h1>Сценарии</h1><p className="lead">Выберите этап переписки, чтобы подготовить следующий ответ.</p></header><div className="action-grid">{['new', 'delivery', 'pickup', 'after-purchase'].map((id) => <button key={id} className="action-card" onClick={() => open(id)} type="button"><span className="action-copy"><strong>{{ new: 'Новый покупатель', delivery: 'Авито Доставка', pickup: 'Самовывоз', 'after-purchase': 'После покупки' }[id]}</strong></span><span className="action-arrow">↗</span></button>)}</div></section>}

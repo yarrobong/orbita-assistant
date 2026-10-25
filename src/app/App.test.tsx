@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); window.location.hash = '#/home' })
+afterEach(() => { cleanup(); Reflect.deleteProperty(navigator, 'serviceWorker'); vi.unstubAllGlobals(); window.location.hash = '#/home' })
 beforeEach(() => { window.location.hash = '#/home' })
 
 describe('app shell', () => {
@@ -40,6 +40,24 @@ describe('app shell', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Поиск ответа' }), { target: { value: 'белый геймпад' } })
 
     expect(screen.getByRole('heading', { name: 'Есть белые геймпады Xbox' })).toBeInTheDocument()
+  })
+
+  it('offers a waiting PWA update and activates it only after the user chooses update', async () => {
+    const waiting = { postMessage: vi.fn() }
+    const registration = new EventTarget() as EventTarget & { waiting: typeof waiting; update: () => Promise<void> }
+    registration.waiting = waiting
+    registration.update = vi.fn().mockResolvedValue(undefined)
+    const serviceWorker = new EventTarget() as EventTarget & { ready: Promise<typeof registration> }
+    serviceWorker.ready = Promise.resolve(registration)
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: serviceWorker })
+
+    render(<App />)
+
+    expect(await screen.findByText(/доступно обновление/i)).toBeInTheDocument()
+    expect(waiting.postMessage).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Обновить приложение' }))
+
+    expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'ACTIVATE_UPDATE' })
   })
 
   it('does not call clipboard success when the browser rejects copying', async () => {
