@@ -156,7 +156,7 @@ h1 { margin: 0; font-size: clamp(24px, 6vw, 30px); letter-spacing: -.035em; }
   .brand > span:last-child { display: grid; gap: 1px; }
   .brand strong { font-size: 14px; letter-spacing: .05em; }
   .brand small { color: var(--color-muted); font-size: 12px; }
-  .primary-nav { position: static; display: grid; gap: 4px; padding: 0; border: 0; background: transparent; }
+  .primary-nav { position: static; display: grid; grid-template-columns: 1fr; align-content: start; gap: 4px; padding: 0; border: 0; background: transparent; }
   .nav-item { display: flex; min-height: 44px; align-items: center; gap: 11px; padding: 0 11px; border: 0; border-radius: 9px; background: transparent; color: #596569; text-align: left; cursor: pointer; }
   .nav-item.is-active { background: #fbefea; color: var(--color-accent-dark); font-weight: 600; }
   .nav-icon { width: 20px; text-align: center; font-size: 17px; }

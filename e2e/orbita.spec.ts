@@ -163,6 +163,7 @@ test('quick answer opens a source template and records only its ID as recent', a
   await page.goto('./#/quick')
   await page.getByRole('button', { name: 'Сделаете фотографии?' }).click()
   await expect(page).toHaveURL(/#\/template\/auto-10$/u)
+  await expect(page.locator('.audience-switch')).toHaveCount(0)
   await page.getByRole('button', { name: 'Копировать' }).click()
   await expect(page.getByText('Скопировано')).toBeVisible()
   await expect.poll(() => page.evaluate(() => localStorage.getItem('orbita:recent-templates'))).toContain('auto-10')
@@ -193,10 +194,37 @@ test('search opens focused on mobile, filters as you type, and supports the desk
   await expect(page.getByRole('searchbox', { name: 'Быстрый поиск' })).toBeFocused()
 })
 
+test('primary navigation is vertical on desktop and spans three destinations on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('./#/home')
+  const items = page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('button')
+  await expect(items).toHaveCount(3)
+  const first = await items.nth(0).boundingBox()
+  const second = await items.nth(1).boundingBox()
+  expect(second!.y).toBeGreaterThan(first!.y)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  const mobileNav = await page.getByRole('navigation', { name: 'Основная навигация' }).boundingBox()
+  expect(mobileNav!.width).toBe(390)
+  await expect(items).toHaveCount(3)
+})
+
 test('home view has no WCAG A/AA axe violations', async ({ page }) => {
   await page.goto('./#/home')
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   expect(results.violations).toEqual([])
+})
+
+test('answers, mobile search, and composer have no WCAG A/AA axe violations', async ({ page }) => {
+  const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+  await page.goto('./#/answers')
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Открыть поиск' }).click()
+  await page.getByRole('searchbox', { name: 'Поиск по ответам' }).fill('белый геймпад')
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
+  await page.getByRole('option', { name: 'Есть белые геймпады Xbox' }).click()
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
 })
 
 test('service worker caches app shell and permits offline reload', async ({ page, context }) => {

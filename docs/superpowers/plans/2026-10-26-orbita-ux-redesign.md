@@ -51,7 +51,7 @@
 - [x] Run the focused tests and confirm the expected guard failures.
 - [x] Implement the minimal state/guard changes and expose only the current step’s checks and factual statuses in each flow.
 - [x] Run domain tests and focused Playwright cases.
-- [ ] Commit as `fix: remove pickup confirmation cycles`.
+- [x] Commit as `fix: remove pickup confirmation cycles`.
 
 ### Task 3: Quick answers, composer, library, and recent/favorite access
 
@@ -63,7 +63,7 @@
 - [x] Run focused tests and confirm they fail for absent behavior.
 - [x] Implement compact answer cards and one-action edit affordance; show only relevant checks and an explained blocker; track only safe template IDs in recents.
 - [x] Run focused unit and Playwright tests.
-- [ ] Commit as `feat: add quick answers and compact response library`.
+- [x] Commit as `feat: add quick answers and compact response library`.
 
 ### Task 4: Responsive shell, search, accessibility, and settings
 
@@ -75,14 +75,14 @@
 - [x] Run focused tests and inspect their expected failures.
 - [x] Implement responsive layout with minimal inline SVG icons, reduced-motion support, install/offline/version settings, and no nested mobile scrollers.
 - [x] Run unit/e2e checks and current axe home check.
-- [ ] Commit as `feat: refine responsive ORBITA interface`.
+- [x] Commit as `feat: refine responsive ORBITA interface`.
 
 ### Task 5: Full acceptance, visual review, and publish
 
 **Files:** `e2e/orbita.spec.ts`, `e2e/platform.spec.ts`, `docs/acceptance.md`, screenshots under ignored test artifacts only unless they are useful review deliverables.
 
-- [ ] Add/update visual scenarios for home, delivery, pickup, guarded composer, answers/search, and edit at widths 320, 375, 390, 430, 768, 1280, plus a short mobile viewport.
-- [ ] Run lint, typecheck, Vitest, Playwright Chromium/WebKit, build, public-data audit, budget audit, and Lighthouse; compare performance/a11y against the stated 95 floors.
-- [ ] Inspect the screenshots and fix any clipping, overlap, dead space, poor wrapping, or unreachable controls; rerun affected tests.
-- [ ] Verify offline reload, direct deep links, update prompt, and production deployment through the existing Pages workflow.
+- [x] Add/update Playwright scenarios for home, delivery, pickup, guarded composer, answers/search, and responsive layouts; capture and inspect 320, 375, 390, 430, 768, 1280, 1440, plus a short 320×560 mobile viewport.
+- [x] Run lint, typecheck, Vitest, Playwright Chromium, build, public-data audit, budget audit, and Lighthouse. The macOS Playwright WebKit process crashes before browser launch; GitHub CI runs Chromium and WebKit on Linux.
+- [x] Inspect screenshots; fix desktop navigation geometry and irrelevant audience-switch display; rerun the responsive and composer tests.
+- [ ] Verify offline reload, direct deep links, update prompt, and production deployment through the existing Pages workflow. Offline reload and deep links are verified locally; remote CI and publication remain pending.
 - [ ] Update acceptance evidence, commit as `docs: record ORBITA 1.1 acceptance`, and publish only after checks pass.

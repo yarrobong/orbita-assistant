@@ -53,9 +53,10 @@ const safeReadRecentIds = (): string[] => {
 
 function TemplateUse({ template, onBack, onCopied }: { template: Template; onBack: () => void; onCopied: () => void }) {
   const path = template.category === 'pickup' ? 'pickup' : template.category === 'delivery' ? 'delivery' : 'new'
+  const canSwitchAudience = template.audience === 'handover' || template.guardFlags.includes('handoverContext')
   const [state, setState] = useState(() => initialFlowState(path))
   const update = (event: Parameters<typeof transition>[1]) => setState((current) => transition(current, event))
-  return <section><button className="back-link" type="button" onClick={onBack}>← Все ответы</button><header className="page-heading"><p className="eyebrow">ШАБЛОН ИЗ БАЗЫ</p><h1>{template.title}</h1></header><CopyComposer template={template} state={state} onFieldChange={(field, value) => update({ type: 'set-field', field, value })} onConfirm={(flag, value) => update({ type: 'confirm', flag, value })} onAudienceChange={(audience) => update({ type: 'set-audience', audience })} onCopied={onCopied} /></section>
+  return <section><button className="back-link" type="button" onClick={onBack}>← Все ответы</button><header className="page-heading"><p className="eyebrow">ШАБЛОН ИЗ БАЗЫ</p><h1>{template.title}</h1></header><CopyComposer template={template} state={state} onFieldChange={(field, value) => update({ type: 'set-field', field, value })} onConfirm={(flag, value) => update({ type: 'confirm', flag, value })} onAudienceChange={canSwitchAudience ? (audience) => update({ type: 'set-audience', audience }) : undefined} onCopied={onCopied} /></section>
 }
 
 function AppShell() {
