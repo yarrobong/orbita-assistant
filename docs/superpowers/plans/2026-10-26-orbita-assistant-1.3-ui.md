@@ -139,11 +139,11 @@
 - Consumes: shell, home, master-detail and composer layouts from Tasks 1–4.
 - Produces: complete empty/offline/error/focus/hover/active/disabled styling and verified breakpoints at 320, 390, 768, 1280 and 1728 px; keyboard-open mobile viewport coverage.
 
-- [ ] **Step 1: Add failing interaction checks** for 320 px no-overflow, 320 × 360 short screen copy visibility, 390 px bottom safe-area content, keyboard-open editor layout, focus-visible styling, and empty search results.
-- [ ] **Step 2: Run the targeted Playwright tests**; expected: any remaining overlap, hidden action, focus or empty-state defect fails with a specific assertion.
-- [ ] **Step 3: Correct the smallest affected layout/component rules** without adding a UI library or decorative motion.
-- [ ] **Step 4: Run the 5-width Playwright matrix and axe checks**; expected: no horizontal scroll, all primary actions reachable, and no A/AA violations in home, answers, scenarios and composer.
-- [ ] **Step 5: Save after screenshots** for home, answers, delivery and pickup at all five widths; expected: files pair with `docs/screenshots/1.3-before/` and show equivalent states.
+- [x] **Step 1: Add failing interaction checks** for 320 px no-overflow, 320 × 360 short screen copy visibility, 390 px bottom safe-area content, keyboard-open editor layout, focus-visible styling, and empty search results.
+- [x] **Step 2: Run the targeted Playwright tests**; expected: any remaining overlap, hidden action, focus or empty-state defect fails with a specific assertion.
+- [x] **Step 3: Correct the smallest affected layout/component rules** without adding a UI library or decorative motion.
+- [x] **Step 4: Run the 5-width Playwright matrix and axe checks**; expected: no horizontal scroll, all primary actions reachable, and no A/AA violations in home, answers, scenarios and composer.
+- [x] **Step 5: Save after screenshots** for home, answers, delivery and pickup at all five widths; expected: files pair with `docs/screenshots/1.3-before/` and show equivalent states.
 - [ ] **Step 6: Commit** as `fix: polish ORBITA responsive workspace layouts`.
 
 ## Task 6: Full regression, bundle/data audits and CI publication

@@ -268,11 +268,49 @@ test('primary navigation is vertical on desktop and spans three destinations on 
 })
 
 test('responsive workspace has no horizontal overflow at all target widths', async ({ page }) => {
-  await page.goto('./#/home')
   for (const width of [320, 390, 768, 1280, 1728]) {
-    await page.setViewportSize({ width, height: width < 500 ? 740 : 900 })
+    const height = width < 500 ? 740 : 900
+    await page.setViewportSize({ width, height })
+    await page.goto('./#/home')
+    await expect(page.getByRole('heading', { name: 'Подготовить сообщение' })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+    await page.goto('./#/answers')
+    await expect(page.locator('.template-row')).toHaveCount(118)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+    await page.goto('./#/flow/delivery')
+    await page.getByRole('group', { name: 'Ситуации доставки' }).getByRole('button', { name: 'Заказ отправлен' }).click()
+    await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+    await expect(page.getByRole('button', { name: 'Копировать' })).toBeInViewport()
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
   }
+})
+
+test('short mobile composer, safe-area spacing, keyboard focus, and empty search stay usable', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 360 })
+  await page.goto('./#/flow/delivery')
+  await page.getByRole('group', { name: 'Ситуации доставки' }).getByRole('button', { name: 'Заказ отправлен' }).click()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+  await page.getByRole('button', { name: 'Копировать' }).scrollIntoViewIfNeeded()
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  const bottomPadding = await page.locator('.main-content').evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingBottom))
+  expect(bottomPadding).toBeGreaterThanOrEqual(108)
+  const nav = await page.getByRole('navigation', { name: 'Основная навигация' }).boundingBox()
+  expect(nav!.y + nav!.height).toBeLessThanOrEqual(844)
+
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('./#/home')
+  await page.keyboard.press('Control+k')
+  const focusedSearch = page.getByRole('searchbox', { name: 'Быстрый поиск' })
+  await expect(focusedSearch).toBeFocused()
+  const focusStyle = await focusedSearch.evaluate((element) => ({ visible: element.matches(':focus-visible'), width: getComputedStyle(element).outlineWidth }))
+  expect(focusStyle.visible).toBe(true)
+  expect(focusStyle.width).toBe('2px')
+
+  await page.goto('./#/answers')
+  await page.getByRole('searchbox', { name: 'Поиск ответа' }).fill('zzzz-no-results')
+  await expect(page.getByText('Ничего не найдено. Попробуйте другое слово или категорию.')).toBeVisible()
 })
 
 test('home view has no WCAG A/AA axe violations', async ({ page }) => {
@@ -281,7 +319,7 @@ test('home view has no WCAG A/AA axe violations', async ({ page }) => {
   expect(results.violations).toEqual([])
 })
 
-test('answers, mobile search, and composer have no WCAG A/AA axe violations', async ({ page }) => {
+test('answers, mobile search, scenarios, and composer have no WCAG A/AA axe violations', async ({ page }) => {
   const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
   await page.goto('./#/answers')
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
@@ -290,6 +328,12 @@ test('answers, mobile search, and composer have no WCAG A/AA axe violations', as
   await page.getByRole('searchbox', { name: 'Поиск по ответам' }).fill('белый геймпад')
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
   await page.getByRole('option', { name: 'Есть белые геймпады Xbox' }).click()
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
+  await page.goto('./#/flow/delivery')
+  await page.getByRole('group', { name: 'Ситуации доставки' }).getByRole('button', { name: 'Заказ отправлен' }).click()
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
+  await page.goto('./#/flow/pickup')
+  await page.getByRole('group', { name: 'Ситуации самовывоза' }).getByRole('button', { name: 'Интересуется самовывозом' }).click()
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
 })
 

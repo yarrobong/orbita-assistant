@@ -49,6 +49,7 @@ button:focus-visible, input:focus-visible, a:focus-visible, textarea:focus-visib
 .search-form { display: flex; min-width: 0; height: 42px; flex: 1; align-items: center; gap: 9px; padding: 0 11px; border: 1px solid var(--color-line); border-radius: 10px; background: #f8f9f9; }
 .search-icon { color: var(--color-muted); font-size: 21px; line-height: 1; }
 .search-form input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 16px; }
+.search-form input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; border-radius: 2px; }
 .search-form input::placeholder { color: #7b8588; }
 kbd { display: none; padding: 3px 5px; border: 1px solid var(--color-line); border-radius: 5px; color: var(--color-muted); font-size: 11px; white-space: nowrap; }
 .settings-button { width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: #626e71; font-size: 18px; }
