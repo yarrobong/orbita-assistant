@@ -75,12 +75,12 @@
 - Consumes: `onOpen`, `onUseTemplate`, `favorites`, `recentIds`, `lastScenario`, and existing `templateCatalog`.
 - Produces: compact primary actions, recent/favorite answers only when present, and a normal “Продолжить” row when a saved scenario exists.
 
-- [ ] **Step 1: Write failing render tests** for four compact actions, removed repeated eyebrow/hero treatment, recent answer selection, empty-state omission, and a non-banner continuation row.
-- [ ] **Step 2: Run `npm test -- src/features/HomeScreen.test.tsx`**; expected: tests fail because the current 2×2 card home still renders its repeated brand eyebrow and lacks tested content layout.
-- [ ] **Step 3: Implement the compact workspace home** using real catalog content and existing handlers; omit empty sections rather than rendering placeholders.
-- [ ] **Step 4: Run `npm test -- src/features/HomeScreen.test.tsx`**; expected: all new home behavior tests pass.
-- [ ] **Step 5: Run the focused home Playwright test and axe check**; expected: visible actions work and no WCAG A/AA violations.
-- [ ] **Step 6: Commit** as `feat: simplify ORBITA home workspace`.
+- [x] **Step 1: Write failing render tests** for four compact actions, removed repeated eyebrow/hero treatment, recent answer selection, empty-state omission, and a non-banner continuation row.
+- [x] **Step 2: Run `npm test -- src/features/HomeScreen.test.tsx`**; expected: tests fail because the current 2×2 card home still renders its repeated brand eyebrow and lacks tested content layout.
+- [x] **Step 3: Implement the compact workspace home** using real catalog content and existing handlers; omit empty sections rather than rendering placeholders.
+- [x] **Step 4: Run `npm test -- src/features/HomeScreen.test.tsx`**; expected: all new home behavior tests pass.
+- [x] **Step 5: Run the focused home Playwright test and axe check**; expected: visible actions work and no WCAG A/AA violations.
+- [x] **Step 6: Commit** as `feat: simplify ORBITA home workspace`.
 
 ## Task 3: Implement master-detail for quick answers and the template library
 
