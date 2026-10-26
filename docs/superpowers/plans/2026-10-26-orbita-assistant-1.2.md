@@ -43,13 +43,13 @@
 
 ### Task 2: Neutral composer and explicit contact handling
 
-**Files:** `src/domain/neutral-alternative.ts`, `src/domain/neutral-alternative.test.ts`, `src/components/CopyComposer.tsx`, `src/components/CopyComposer.test.tsx`, `src/domain/types.ts`.
+**Files:** `src/components/CopyComposer.tsx`, `src/components/CopyComposer.test.tsx`, `src/domain/types.ts`, `src/domain/templates.test.ts`. Category defaults live beside the composer until scenario-specific wording moves into `src/data/scenario-stages.ts` in Task 3.
 
-- [ ] Add failing tests for a missing-date neutral alternative that copies without placeholders, and a handover contact absent by default.
-- [ ] Add failing tests requiring both permission and a separate include action before phone/name enter copied text.
-- [ ] Run composer tests and confirm expected failures.
-- [ ] Implement category/stage-specific neutral alternatives, hidden optional details, safe text preview, edit toggle, and two-step contact inclusion. Keep internal message labeling and audience checks.
-- [ ] Run composer/unit tests; commit `feat: make ORBITA copy safe without confirmation checklists`.
+- [x] Add failing tests for a missing-date neutral alternative that copies without placeholders, and a handover contact absent by default.
+- [x] Add failing tests requiring both permission and a separate include action before phone/name enter copied text.
+- [x] Run composer tests and confirm expected failures.
+- [x] Implement category/stage-specific neutral alternatives, hidden optional details, safe text preview, edit toggle, and two-step contact inclusion. Keep internal message labeling and audience checks.
+- [x] Run composer/unit tests; commit `feat: make ORBITA copy safe without confirmation checklists`.
 
 ### Task 3: Directly selectable delivery, pickup, and after-purchase screens
 

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import CopyComposer from './CopyComposer'
-import { initialFlowState } from '../domain/flow'
+import { initialFlowState, transition } from '../domain/flow'
 import type { Template } from '../domain/types'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
@@ -24,11 +24,76 @@ describe('CopyComposer', () => {
     expect(await screen.findByText('Скопировано')).toBeInTheDocument()
   })
 
-  it('blocks copying required fields until filled and rendered', () => {
-    const template = { ...basicTemplate, body: 'Самовывоз {{date}} в {{time}}', requiredFields: ['date', 'time'] }
+  it('copies a neutral alternative when required fields are missing', () => {
+    const template = { ...basicTemplate, body: 'Самовывоз {{date}} в {{time}}', requiredFields: ['date', 'time'], neutralAlternative: 'Уточню время самовывоза и напишу вам.' }
     render(<CopyComposer template={template} state={initialFlowState('pickup')} onFieldChange={() => {}} />)
 
-    expect(screen.getByRole('button', { name: 'Копировать' })).toBeDisabled()
-    expect(screen.getByText(/Заполните дату и время/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+    expect(screen.getByLabelText('Текст сообщения')).toHaveValue(template.neutralAlternative)
+    expect(screen.getByText(/Добавьте дату и время/)).toBeInTheDocument()
+  })
+
+  it('offers and copies a neutral alternative when required fields are missing', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    const template = {
+      ...basicTemplate,
+      body: 'Подъезжайте {{date}} в {{time}}',
+      requiredFields: ['date', 'time'],
+      neutralAlternative: 'Я уточню удобное время и напишу вам. Пока не выезжайте, пожалуйста.',
+    }
+    render(<CopyComposer template={template} state={initialFlowState('pickup')} onFieldChange={() => {}} />)
+
+    expect(screen.getByLabelText('Текст сообщения')).toHaveValue(template.neutralAlternative)
+    expect(screen.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+    expect((screen.getByLabelText('Текст сообщения') as HTMLTextAreaElement).value).not.toContain('{{')
+    fireEvent.click(screen.getByRole('button', { name: 'Копировать' }))
+    expect(writeText).toHaveBeenCalledWith(template.neutralAlternative)
+    expect(await screen.findByText('Скопировано')).toBeInTheDocument()
+  })
+
+  it('includes a handover contact only after permission and a separate include action', () => {
+    const contactTemplate = {
+      ...basicTemplate,
+      id: 'pickup.contact',
+      category: 'pickup' as const,
+      body: 'Выдающий {{handoverName}}, телефон {{handoverPhone}}.',
+      requiredFields: ['handoverName', 'handoverPhone'],
+      guardFlags: ['contactPermission'] as Template['guardFlags'],
+      neutralAlternative: 'Я уточню детали выдачи и напишу вам.',
+    }
+    let state = initialFlowState('pickup')
+    state = transition(state, { type: 'set-field', field: 'handoverName', value: 'Мария' })
+    state = transition(state, { type: 'set-field', field: 'handoverPhone', value: '+7 900 123-45-67' })
+    const onConfirm = vi.fn()
+    render(<CopyComposer template={contactTemplate} state={state} onFieldChange={() => {}} onConfirm={onConfirm} />)
+
+    expect(screen.getByLabelText('Текст сообщения')).toHaveValue(contactTemplate.neutralAlternative)
+    expect(screen.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+    fireEvent.click(screen.getByLabelText('Подтверждаю разрешение передать контакт'))
+    expect(onConfirm).toHaveBeenCalledWith('contactPermission', true)
+    expect(screen.queryByLabelText('Добавить контакт выдающего в сообщение')).not.toBeInTheDocument()
+  })
+
+  it('requires a separate include action after contact permission is present', () => {
+    const contactTemplate = {
+      ...basicTemplate,
+      id: 'pickup.contact',
+      category: 'pickup' as const,
+      body: 'Выдающий {{handoverName}}, телефон {{handoverPhone}}.',
+      requiredFields: ['handoverName', 'handoverPhone'],
+      guardFlags: ['contactPermission'] as Template['guardFlags'],
+      neutralAlternative: 'Я уточню детали выдачи и напишу вам.',
+    }
+    let state = initialFlowState('pickup')
+    state = transition(state, { type: 'set-field', field: 'handoverName', value: 'Мария' })
+    state = transition(state, { type: 'set-field', field: 'handoverPhone', value: '+7 900 123-45-67' })
+    state = transition(state, { type: 'confirm', flag: 'contactPermission', value: true })
+    render(<CopyComposer template={contactTemplate} state={state} onFieldChange={() => {}} />)
+
+    const include = screen.getByLabelText('Добавить контакт выдающего в сообщение')
+    expect(include).not.toBeChecked()
+    fireEvent.click(include)
+    expect(screen.getByLabelText('Текст сообщения')).toHaveValue('Выдающий Мария, телефон +7 900 123-45-67.')
   })
 })

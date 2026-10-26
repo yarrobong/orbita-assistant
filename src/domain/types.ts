@@ -27,6 +27,7 @@ export type Template = {
   revision: number
   source: SourceCollection
   usage: string
+  neutralAlternative?: string
 }
 
 export type FlowFlags = Record<FlagName, boolean>

@@ -48,17 +48,19 @@ describe('source-grounded template catalog', () => {
     expect(guards('scenario-18')).toContain('buyerNotified')
   })
 
-  it('does not expose in-stock or out-of-stock claims until that exact status is confirmed', () => {
+  it('keeps inventory guard metadata without requiring a second checkbox after template selection', () => {
     const available = templateCatalog.find((item) => item.id === 'R01')!
     const unavailable = templateCatalog.find((item) => item.id === 'R07')!
     let state = initialFlowState('new')
-    expect(canUseTemplate(available, state).allowed).toBe(false)
-    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
+    expect(available.guardFlags).toContain('stockAvailable')
+    expect(unavailable.guardFlags).toContain('stockUnavailable')
+    expect(canUseTemplate(available, state).allowed).toBe(true)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(true)
     state = transition(state, { type: 'set-field', field: 'product', value: 'Геймпад' })
     state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'available' })
     state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
     expect(canUseTemplate(available, state).allowed).toBe(true)
-    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(true)
   })
 
   it.each([
