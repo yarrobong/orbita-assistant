@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { templateCatalog } from '../data/templates'
 import { searchTemplates } from '../lib/search'
 import { categoryLabel } from '../lib/template-preferences'
@@ -16,6 +16,8 @@ export default function TemplateLibrary({ favorites, recentIds, onFavorite, onUs
   const query = externalQuery ?? localQuery
   const [category, setCategory] = useState<LibraryCategory>()
   const [copiedId, setCopiedId] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  useEffect(() => { if (!selectedId) searchRef.current?.focus() }, [selectedId])
   const results = useMemo(() => {
     const base = searchTemplates(templateCatalog, query, category === 'favorites' ? 'favorites' : undefined, new Set(favorites))
     if (category === 'recent') return base.filter(({ id }) => recentIds.includes(id)).sort((a, b) => recentIds.indexOf(a.id) - recentIds.indexOf(b.id))
@@ -32,7 +34,7 @@ export default function TemplateLibrary({ favorites, recentIds, onFavorite, onUs
     onUse(id)
   }
   return <section className={`library-view${embedded ? ' is-embedded' : ''}`} aria-labelledby="page-title"><header className="page-heading">{!embedded && <p className="eyebrow">БАЗА ОТВЕТОВ ORBITA</p>}<h1 id="page-title">Все ответы</h1>{!embedded && <p className="lead">Шаблоны из рабочей базы. Перед отправкой проверьте подсказки и условия.</p>}</header>
-    <label className="library-search"><span className="sr-only">Поиск ответа</span><input autoFocus type="search" aria-label="Поиск ответа" placeholder="Например, доставка или Quest 3S" value={query} onChange={(event) => onQueryChange ? onQueryChange(event.target.value) : setLocalQuery(event.target.value)} /></label>
+    <label className="library-search"><span className="sr-only">Поиск ответа</span><input ref={searchRef} type="search" aria-label="Поиск ответа" placeholder="Например, доставка или Quest 3S" value={query} onChange={(event) => onQueryChange ? onQueryChange(event.target.value) : setLocalQuery(event.target.value)} /></label>
     <div className="category-chips" aria-label="Категории">{categories.map(([label, value]) => <button type="button" key={label} aria-pressed={category === value} onClick={() => setCategory(value as typeof category)}>{label}</button>)}</div>
     <p className="result-count" aria-live="polite">{results.length} ответов</p>
     <div className="template-list">{results.map((template) => {

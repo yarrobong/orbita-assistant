@@ -156,11 +156,11 @@
 - Consumes: completed UI and regression suites.
 - Produces: buildable static app, passing unit/E2E/PWA/privacy/budget checks, comparable Lighthouse evidence and CI-deployed Pages update from this feature branch.
 
-- [ ] **Step 1: Run `npm test`, `npm run typecheck`, `npm run lint`**; expected: exit 0 with all unit tests passing.
+- [x] **Step 1: Run `npm test`, `npm run typecheck`, `npm run lint`**; expected: exit 0 with all unit tests passing.
 - [ ] **Step 2: Run `npm run test:e2e`**; expected: Chromium plus configured CI browser/device coverage verifies routes, PWA offline, search, copying, private contact, 118 templates and responsive layouts.
-- [ ] **Step 3: Run `npm run audit:public && npm run audit:budget`**; expected: no private-data leakage and no bundle/CSS budget regression beyond the documented existing threshold.
-- [ ] **Step 4: Run `npm run audit:lighthouse` and compare repeatable runs to 1.2 baseline**; expected: Accessibility >=95 and no systematic Performance regression under comparable conditions; report environment and variance.
-- [ ] **Step 5: Review screenshots and `git diff --check`**; expected: accepted design hierarchy, all requested viewports covered, no malformed whitespace.
+- [x] **Step 3: Run `npm run audit:public && npm run audit:budget`**; expected: no private-data leakage and no bundle/CSS budget regression beyond the documented existing threshold.
+- [x] **Step 4: Run `npm run audit:lighthouse` and compare repeatable runs to 1.2 baseline**; expected: Accessibility >=95 and no systematic Performance regression under comparable conditions; report environment and variance.
+- [x] **Step 5: Review screenshots and `git diff --check`**; expected: accepted design hierarchy, all requested viewports covered, no malformed whitespace.
 - [ ] **Step 6: Commit any fixes** with the finding they address; rerun the affected test and full suite.
 - [ ] **Step 7: Push feature branch and open/update the repository's CI path**; expected: existing GitHub Actions workflow passes and deploys the feature release to GitHub Pages. Confirm the published artifact contains no personal or buyer data.
 
