@@ -56,12 +56,12 @@
 - Consumes: current `AppRoute`, three `navItems`, existing `searchTemplates` and mobile-search overlay behavior.
 - Produces: `.app-frame`, `.sidebar`, `.workspace`, `.topbar`, `.main-content`, `.primary-nav` responsive layout classes; sidebar 216 px at >=1024 px, topbar 60 px, mobile three-item bottom navigation below 760 px.
 
-- [ ] **Step 1: Write failing layout tests** asserting sidebar width 216 ± 4 px at 1280 px, topbar height 56–64 px, three mobile nav items at 390 px, and no horizontal overflow at 320/390/768/1280/1728 px.
-- [ ] **Step 2: Run the focused Playwright tests** with `npx playwright test e2e/orbita.spec.ts --project=chromium --grep "primary navigation|responsive"`; expected: new layout assertions fail against 232 px sidebar and current content sizing.
-- [ ] **Step 3: Implement the shell and tokens** in `src/styles/app.css` and `src/app/App.tsx`, retaining the global search shortcut and three destinations.
-- [ ] **Step 4: Run focused Playwright tests**; expected: all layout assertions pass and existing mobile search/navigation remains functional.
-- [ ] **Step 5: Run `npm run typecheck && npm run lint`**; expected: exit 0.
-- [ ] **Step 6: Commit** as `feat: establish ORBITA 1.3 workspace shell`.
+- [x] **Step 1: Write failing layout tests** asserting sidebar width 216 ± 4 px at 1280 px, topbar height 56–64 px, three mobile nav items at 390 px, and no horizontal overflow at 320/390/768/1280/1728 px.
+- [x] **Step 2: Run the focused Playwright tests** with `npx playwright test e2e/orbita.spec.ts --project=chromium --grep "primary navigation|responsive"`; expected: new layout assertions fail against 232 px sidebar and current content sizing.
+- [x] **Step 3: Implement the shell and tokens** in `src/styles/app.css` and `src/app/App.tsx`, retaining the global search shortcut and three destinations.
+- [x] **Step 4: Run focused Playwright tests**; expected: all layout assertions pass and existing mobile search/navigation remains functional.
+- [x] **Step 5: Run `npm run typecheck && npm run lint`**; expected: exit 0.
+- [x] **Step 6: Commit** as `feat: establish ORBITA 1.3 workspace shell`.
 
 ## Task 2: Replace the home dashboard with a working home surface
 
