@@ -71,10 +71,10 @@
 
 **Interfaces:** Mobile bottom nav has three destinations and safe-area padding; desktop uses a sidebar. Mobile search opens a focused full-screen field; Answers opens with its search field focused. Cmd/Ctrl+K opens search. Copy controls remain visible above navigation and keyboard without covering inputs.
 
-- [ ] Write failing tests for mobile search open/focus, keyboard shortcuts, nav active state, bottom copy/navigation separation, and keyboard navigation.
-- [ ] Run focused tests and inspect their expected failures.
-- [ ] Implement responsive layout with minimal inline SVG icons, reduced-motion support, install/offline/version settings, and no nested mobile scrollers.
-- [ ] Run unit/e2e and axe checks.
+- [x] Write failing tests for mobile search open/focus, keyboard shortcuts, nav active state, bottom copy/navigation separation, and keyboard navigation.
+- [x] Run focused tests and inspect their expected failures.
+- [x] Implement responsive layout with minimal inline SVG icons, reduced-motion support, install/offline/version settings, and no nested mobile scrollers.
+- [x] Run unit/e2e checks and current axe home check.
 - [ ] Commit as `feat: refine responsive ORBITA interface`.
 
 ### Task 5: Full acceptance, visual review, and publish

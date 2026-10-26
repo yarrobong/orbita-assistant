@@ -1,5 +1,6 @@
 import { templateCatalog } from '../data/templates'
 import { categoryLabel } from '../lib/template-preferences'
+import Icon, { type IconName } from '../components/Icon'
 
 type Props = {
   onOpen: (id: string) => void
@@ -11,10 +12,10 @@ type Props = {
 }
 
 const actions = [
-  { id: 'quick', title: 'Ответить покупателю', detail: 'Выбрать быстрый ответ', icon: '↗' },
-  { id: 'delivery', title: 'Авито Доставка', detail: 'Ответить по текущему этапу', icon: '⇢' },
-  { id: 'pickup', title: 'Самовывоз', detail: 'Согласовать товар и время', icon: '⌖' },
-  { id: 'after-purchase', title: 'После покупки', detail: 'Помочь или попросить отзыв', icon: '✓' },
+  { id: 'quick', title: 'Ответить покупателю', detail: 'Выбрать быстрый ответ', icon: 'reply' },
+  { id: 'delivery', title: 'Авито Доставка', detail: 'Ответить по текущему этапу', icon: 'delivery' },
+  { id: 'pickup', title: 'Самовывоз', detail: 'Согласовать товар и время', icon: 'pickup' },
+  { id: 'after-purchase', title: 'После покупки', detail: 'Помочь или попросить отзыв', icon: 'after' },
 ]
 
 export default function HomeScreen({ onOpen, onUseTemplate, favorites, recentIds, lastScenario, onContinue }: Props) {
@@ -27,9 +28,9 @@ export default function HomeScreen({ onOpen, onUseTemplate, favorites, recentIds
     </section>
     <section className="action-grid" aria-label="Выберите ситуацию">
       {actions.map((action, index) => <button className={`action-card${index === 0 ? ' action-card-primary' : ''}`} key={action.id} type="button" onClick={() => onOpen(action.id)}>
-        <span className="action-icon" aria-hidden="true">{action.icon}</span>
+        <span className="action-icon"><Icon name={action.icon as IconName} size={21} /></span>
         <span className="action-copy"><strong>{action.title}</strong><small>{action.detail}</small></span>
-        <span className="action-arrow" aria-hidden="true">↗</span>
+        <span className="action-arrow"><Icon name="arrow" size={17} /></span>
       </button>)}
     </section>
     {fastAccess.length > 0 && <section className="home-fast-access" aria-labelledby="fast-access-title"><div className="section-heading"><h2 id="fast-access-title">Недавние и избранные</h2><button className="text-button" type="button" onClick={() => onOpen('answers')}>Все ответы</button></div><div className="fast-access-list">{fastAccess.map((template) => <button className="fast-access-item" type="button" key={template.id} onClick={() => onUseTemplate(template.id)}><span><small>{categoryLabel(template.category)}</small><strong>{template.title}</strong></span><span aria-hidden="true">›</span></button>)}</div></section>}

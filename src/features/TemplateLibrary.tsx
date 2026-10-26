@@ -31,7 +31,7 @@ export default function TemplateLibrary({ favorites, recentIds, onFavorite, onUs
     onUse(id)
   }
   return <section aria-labelledby="page-title"><header className="page-heading"><p className="eyebrow">БАЗА ОТВЕТОВ ORBITA</p><h1 id="page-title">Все ответы</h1><p className="lead">Шаблоны из рабочей базы. Перед отправкой проверьте подсказки и условия.</p></header>
-    <label className="library-search"><span className="sr-only">Поиск ответа</span><input type="search" aria-label="Поиск ответа" placeholder="Например, доставка или Quest 3S" value={query} onChange={(event) => onQueryChange ? onQueryChange(event.target.value) : setLocalQuery(event.target.value)} /></label>
+    <label className="library-search"><span className="sr-only">Поиск ответа</span><input autoFocus type="search" aria-label="Поиск ответа" placeholder="Например, доставка или Quest 3S" value={query} onChange={(event) => onQueryChange ? onQueryChange(event.target.value) : setLocalQuery(event.target.value)} /></label>
     <div className="category-chips" aria-label="Категории">{categories.map(([label, value]) => <button type="button" key={label} aria-pressed={category === value} onClick={() => setCategory(value as typeof category)}>{label}</button>)}</div>
     <p className="result-count" aria-live="polite">{results.length} ответов</p>
     <div className="template-list">{results.map((template) => {

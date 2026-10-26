@@ -401,9 +401,7 @@ export const templateCatalog: Template[] = [
       "Уточнить модель"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "compatibilityChecked"
-    ],
+    "guardFlags": [],
     "checklist": [],
     "defaultPriority": 104,
     "revision": 1,

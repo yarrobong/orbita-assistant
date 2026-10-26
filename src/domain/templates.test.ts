@@ -26,7 +26,7 @@ describe('source-grounded template catalog', () => {
   })
 
   it('allows safe intent questions to be copied before their future facts are known', () => {
-    for (const id of ['R20', 'auto-09', 'top-14', 'top-15']) {
+    for (const id of ['R04', 'R20', 'auto-09', 'top-14', 'top-15']) {
       const template = templateCatalog.find((item) => item.id === id)!
       expect(template.guardFlags).toEqual([])
       expect(canUseTemplate(template, initialFlowState('new')).allowed).toBe(true)

@@ -91,6 +91,26 @@ describe('app shell', () => {
     }
   })
 
+  it('opens the mobile search as a focused dialog and closes it with Escape', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть поиск' }))
+    const dialog = screen.getByRole('dialog', { name: 'Поиск ответов' })
+    const input = within(dialog).getByRole('searchbox', { name: 'Поиск по ответам' })
+    expect(input).toHaveFocus()
+    fireEvent.keyDown(input, { key: 'Tab', shiftKey: true })
+    expect(within(dialog).getByRole('button', { name: 'Закрыть' })).toHaveFocus()
+    fireEvent.keyDown(within(dialog).getByRole('button', { name: 'Закрыть' }), { key: 'Tab' })
+    expect(input).toHaveFocus()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('dialog', { name: 'Поиск ответов' })).not.toBeInTheDocument()
+  })
+
+  it('focuses desktop global search with Control or Command plus K', () => {
+    render(<App />)
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true })
+    expect(screen.getByRole('searchbox', { name: 'Быстрый поиск' })).toHaveFocus()
+  })
+
   it('keeps the internal handover message behind an explicit audience switch', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /Самовывоз/ }))
