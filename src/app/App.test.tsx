@@ -6,14 +6,14 @@ afterEach(() => { cleanup(); Reflect.deleteProperty(navigator, 'serviceWorker');
 beforeEach(() => { window.location.hash = '#/home'; localStorage.clear() })
 
 describe('app shell', () => {
-  it('shows exactly three primary sections and marks Home active', () => {
+  it('shows four primary sections and marks Home active', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'Подготовить сообщение' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.getAllByRole('navigation')).toHaveLength(1)
     const nav = screen.getByRole('navigation', { name: 'Основная навигация' })
-    expect(nav.querySelectorAll('button')).toHaveLength(3)
+    expect(nav.querySelectorAll('button')).toHaveLength(4)
     expect(screen.getByRole('button', { name: 'Главная' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('region', { name: 'Выберите ситуацию' }).querySelectorAll('button')).toHaveLength(4)
     expect(screen.queryByRole('button', { name: 'Сценарии' })).not.toBeInTheDocument()
