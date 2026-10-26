@@ -1,16 +1,17 @@
 # ORBITA Assistant 1.1 — P0 acceptance
 
-**Status:** Candidate validated locally; GitHub Actions verification and Pages deployment are pending. The production URL below remains on the previously published revision until the candidate is merged to `main` and its Pages workflow succeeds.
+**Status:** Published and verified. Main CI and GitHub Pages deployment succeeded for commit `540a186` on 2026-10-26.
 
 ## Production
 
 - App: <https://yarrobong.github.io/orbita-assistant/>
 - Repository: <https://github.com/yarrobong/orbita-assistant>
-- Deployment: the existing GitHub Actions Pages workflow deploys `dist/` from `main`; no app server is required.
+- Deployment: [GitHub Actions run 40248251771](https://github.com/yarrobong/orbita-assistant/actions/runs/40248251771) — verify and deploy both succeeded. The workflow publishes `dist/` from `main`; no app server is required.
+- Production smoke check: app, manifest, and 192 px icon returned HTTP 200; `/#/flow/delivery` loaded directly; after the first online load and one controlled reload, the deep link reloaded successfully with the browser offline.
 
 ## P0 criteria
 
-- [ ] Candidate published to the production URL after successful `main` CI.
+- [x] Candidate published to the production URL after successful `main` CI; public route and offline reload verified.
 - [x] PWA manifest, standalone display, project scope/start URL, 192 px and 512 px icons, and iPhone home-screen metadata are present.
 - [x] Production build's app shell, delivery flow, embedded catalog, and local search work after the first online load without a network connection (Playwright service-worker test).
 - [x] Home has four primary actions: buyer quick answers, delivery, pickup, and after-purchase. Eight quick-answer intents use IDs from the existing ORBITA catalog; quick entry and recent/favorite access are available.
@@ -30,9 +31,9 @@
 
 - Vitest: 60 tests pass.
 - Lint and TypeScript checks pass.
-- Chromium Playwright: 14 tests pass, including WCAG A/AA axe scans on Home, Answers, mobile search, and composer; coverage includes guarded pickup/delivery, quick answers, direct/reloaded routes, search shortcuts, responsive widths, axe scans, service worker update, and offline reload.
-- Local WebKit launch on this macOS host fails before page creation with `SIGSEGV` in Playwright's WebKit binary. CI is configured to run desktop and iPhone Safari profiles on GitHub-hosted Linux; that remote result is pending.
-- Public-data audit passes for source, public, and built files. Lighthouse and bundle budgets pass locally.
+- Chromium Playwright: 14 tests pass, including WCAG A/AA axe scans on Home, Answers, mobile search, and composer; coverage includes guarded pickup/delivery, quick answers, direct/reloaded routes, search shortcuts, responsive widths, service worker update, and offline reload.
+- GitHub Actions run 40248251771 passed the full Linux CI, including Chromium plus desktop Safari and iPhone Safari WebKit profiles, Lighthouse, and Pages deployment. Local WebKit on this macOS host exits with `SIGSEGV` before page creation; the remote profiles provide the platform run.
+- Public-data audit passes for source, public, and built files. Lighthouse and bundle budgets pass locally and in main CI.
 
 ## Device-test limits
 

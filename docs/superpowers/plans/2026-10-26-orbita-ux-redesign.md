@@ -84,5 +84,5 @@
 - [x] Add/update Playwright scenarios for home, delivery, pickup, guarded composer, answers/search, and responsive layouts; capture and inspect 320, 375, 390, 430, 768, 1280, 1440, plus a short 320×560 mobile viewport.
 - [x] Run lint, typecheck, Vitest, Playwright Chromium, build, public-data audit, budget audit, and Lighthouse. The macOS Playwright WebKit process crashes before browser launch; GitHub CI runs Chromium and WebKit on Linux.
 - [x] Inspect screenshots; fix desktop navigation geometry and irrelevant audience-switch display; rerun the responsive and composer tests.
-- [ ] Verify offline reload, direct deep links, update prompt, and production deployment through the existing Pages workflow. Offline reload and deep links are verified locally; remote CI and publication remain pending.
-- [ ] Update acceptance evidence, commit as `docs: record ORBITA 1.1 acceptance`, and publish only after checks pass.
+- [x] Verify offline reload, direct deep links, update prompt, and production deployment through the existing Pages workflow. Main CI passed Chromium/WebKit and Lighthouse; the production deep link and offline reload were verified after deployment.
+- [x] Update acceptance evidence, commit as `docs: record ORBITA 1.1 acceptance`, and publish only after checks pass.
