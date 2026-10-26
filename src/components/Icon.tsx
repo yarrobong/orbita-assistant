@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 
-export type IconName = 'home' | 'answers' | 'settings' | 'reply' | 'delivery' | 'pickup' | 'after' | 'search' | 'arrow'
+export type IconName = 'home' | 'answers' | 'settings' | 'reply' | 'delivery' | 'pickup' | 'after' | 'search' | 'arrow' | 'products'
 
 const paths: Record<IconName, ReactNode> = {
+  products: <><path d="M3.5 7 12 3l8.5 4v10L12 21l-8.5-4Z"/><path d="M3.5 7 12 11l8.5-4M12 11v10" /></>,
   home: <><path d="m3 10 9-7 9 7" /><path d="M5 9v11h14V9M9 20v-6h6v6" /></>,
   answers: <><path d="M7 4h13v16H7zM4 7v14h13" /><path d="M10 9h7M10 12h7M10 15h5" /></>,
   settings: <><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1-.1 1.7Z" transform="translate(-1 -1)" /></>,

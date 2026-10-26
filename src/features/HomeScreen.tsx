@@ -16,6 +16,7 @@ const actions = [
   { id: 'delivery', title: 'Авито Доставка', detail: 'Подготовить сообщение по заказу', icon: 'delivery' },
   { id: 'pickup', title: 'Самовывоз', detail: 'Ответить о встрече и выдаче', icon: 'pickup' },
   { id: 'after-purchase', title: 'После покупки', detail: 'Помочь или попросить отзыв', icon: 'after' },
+  { id: 'products', title: 'Товары и знания', detail: 'Совместимость, характеристики и ответы', icon: 'products' },
 ] as const
 
 export default function HomeScreen({ onOpen, onUseTemplate, favorites, recentIds, lastScenario, onContinue }: Props) {

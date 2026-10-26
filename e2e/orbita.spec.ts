@@ -247,7 +247,7 @@ test('search opens focused on mobile, filters as you type, and supports the desk
   await expect(page.getByRole('searchbox', { name: 'Быстрый поиск' })).toBeFocused()
 })
 
-test('primary navigation is vertical on desktop and spans three destinations on mobile', async ({ page }) => {
+test('primary navigation is vertical on desktop and spans four destinations on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('./#/home')
   const sidebar = page.locator('.sidebar')
@@ -256,7 +256,7 @@ test('primary navigation is vertical on desktop and spans three destinations on 
   expect(topbar!.height).toBeGreaterThanOrEqual(56)
   expect(topbar!.height).toBeLessThanOrEqual(64)
   const items = page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('button')
-  await expect(items).toHaveCount(3)
+  await expect(items).toHaveCount(4)
   const first = await items.nth(0).boundingBox()
   const second = await items.nth(1).boundingBox()
   expect(second!.y).toBeGreaterThan(first!.y)
@@ -264,7 +264,7 @@ test('primary navigation is vertical on desktop and spans three destinations on 
   await page.setViewportSize({ width: 390, height: 844 })
   const mobileNav = await page.getByRole('navigation', { name: 'Основная навигация' }).boundingBox()
   expect(mobileNav!.width).toBe(390)
-  await expect(items).toHaveCount(3)
+  await expect(items).toHaveCount(4)
 })
 
 test('responsive workspace has no horizontal overflow at all target widths', async ({ page }) => {
