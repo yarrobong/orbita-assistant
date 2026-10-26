@@ -293,9 +293,7 @@ export const templateCatalog: Template[] = [
       "Совместимость — уточнить"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "compatibilityChecked"
-    ],
+    "guardFlags": [],
     "checklist": [
       "Не утверждать совместимость без проверки."
     ],
@@ -315,10 +313,7 @@ export const templateCatalog: Template[] = [
       "Торг"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed",
-      "priceConfirmed"
-    ],
+    "guardFlags": [],
     "checklist": [
       "Не обещать скидку без согласования."
     ],
@@ -748,9 +743,7 @@ export const templateCatalog: Template[] = [
       "Уточнить совместимость"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "compatibilityChecked"
-    ],
+    "guardFlags": [],
     "checklist": [],
     "defaultPriority": 120,
     "revision": 1,
@@ -1624,10 +1617,7 @@ export const templateCatalog: Template[] = [
       "Возможен торг?"
     ],
     "requiredFields": [],
-    "guardFlags": [
-      "stockConfirmed",
-      "priceConfirmed"
-    ],
+    "guardFlags": [],
     "checklist": [
       "Не обещает снижение цены"
     ],

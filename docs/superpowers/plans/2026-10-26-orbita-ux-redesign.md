@@ -59,10 +59,10 @@
 
 **Interfaces:** Four Home actions are buyer quick answer, delivery, pickup, and after-purchase. Quick answer offers the eight named intents from the spec. Template routes are `#/template/{id}`. Safe no-check templates copy from the compact Answers list; guarded templates open one-step preparation. Category labels are user-facing Russian strings, while source IDs and template content remain unchanged.
 
-- [ ] Write failing tests for all eight quick intents, direct quick copy, required-fact guards, Russian category names, recent templates, favorites, and synonym search.
-- [ ] Run focused tests and confirm they fail for absent behavior.
-- [ ] Implement compact answer cards and one-action edit affordance; show only relevant checks and an explained blocker; track only safe template IDs in recents.
-- [ ] Run focused unit and Playwright tests.
+- [x] Write failing tests for all eight quick intents, direct quick copy, required-fact guards, Russian category names, recent templates, favorites, and synonym search.
+- [x] Run focused tests and confirm they fail for absent behavior.
+- [x] Implement compact answer cards and one-action edit affordance; show only relevant checks and an explained blocker; track only safe template IDs in recents.
+- [x] Run focused unit and Playwright tests.
 - [ ] Commit as `feat: add quick answers and compact response library`.
 
 ### Task 4: Responsive shell, search, accessibility, and settings

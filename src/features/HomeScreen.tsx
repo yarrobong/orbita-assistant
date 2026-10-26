@@ -1,19 +1,29 @@
-type Props = { onOpen: (id: string) => void; lastScenario?: { path: string; stage: string } | null; onContinue?: () => void }
+import { templateCatalog } from '../data/templates'
+import { categoryLabel } from '../lib/template-preferences'
+
+type Props = {
+  onOpen: (id: string) => void
+  onUseTemplate: (id: string) => void
+  favorites: string[]
+  recentIds: string[]
+  lastScenario?: { path: string; stage: string } | null
+  onContinue?: () => void
+}
 
 const actions = [
-  { id: 'new', title: 'Новый покупатель', detail: 'Ответить на вопрос и выбрать дальнейший шаг', icon: '↗' },
-  { id: 'delivery', title: 'Авито Доставка', detail: 'Проверить заказ и подготовить ответ по этапу', icon: '⇢' },
-  { id: 'pickup', title: 'Самовывоз', detail: 'Согласовать товар, дату и выдачу', icon: '⌖' },
-  { id: 'after-purchase', title: 'После покупки', detail: 'Помочь покупателю или попросить отзыв', icon: '✓' },
-  { id: 'templates', title: 'Все ответы', detail: 'Найти готовый ответ по вопросу', icon: '⌕' },
+  { id: 'quick', title: 'Ответить покупателю', detail: 'Выбрать быстрый ответ', icon: '↗' },
+  { id: 'delivery', title: 'Авито Доставка', detail: 'Ответить по текущему этапу', icon: '⇢' },
+  { id: 'pickup', title: 'Самовывоз', detail: 'Согласовать товар и время', icon: '⌖' },
+  { id: 'after-purchase', title: 'После покупки', detail: 'Помочь или попросить отзыв', icon: '✓' },
 ]
 
-export default function HomeScreen({ onOpen, lastScenario, onContinue }: Props) {
+export default function HomeScreen({ onOpen, onUseTemplate, favorites, recentIds, lastScenario, onContinue }: Props) {
+  const fastAccessIds = [...new Set([...recentIds, ...favorites])].slice(0, 4)
+  const fastAccess = fastAccessIds.map((id) => templateCatalog.find((template) => template.id === id)).filter((template) => template !== undefined)
   return <>
     <section className="home-intro" aria-labelledby="page-title">
-      <p className="eyebrow">ПОМОЩНИК ПО ПЕРЕПИСКАМ ORBITA</p>
-      <h1 id="page-title">ORBITA Assistant</h1>
-      <p className="lead">Выберите ситуацию — подготовим следующий ответ.</p>
+      <p className="eyebrow">ORBITA ASSISTANT</p>
+      <h1 id="page-title">Что нужно сделать?</h1>
     </section>
     <section className="action-grid" aria-label="Выберите ситуацию">
       {actions.map((action, index) => <button className={`action-card${index === 0 ? ' action-card-primary' : ''}`} key={action.id} type="button" onClick={() => onOpen(action.id)}>
@@ -22,7 +32,7 @@ export default function HomeScreen({ onOpen, lastScenario, onContinue }: Props) 
         <span className="action-arrow" aria-hidden="true">↗</span>
       </button>)}
     </section>
-    {lastScenario && <section className="resume-card"><div><strong>Продолжить последний сценарий</strong><small>{({ new: 'Новый покупатель', delivery: 'Авито Доставка', pickup: 'Самовывоз', 'after-purchase': 'После покупки' } as Record<string, string>)[lastScenario.path] ?? 'Сценарий'} · проверку статусов потребуется подтвердить заново</small></div><button className="button button-secondary" type="button" onClick={onContinue}>Продолжить</button></section>}
-    <p className="privacy-note"><span className="privacy-dot" /> Тексты и отметки хранятся только в этом браузере. Ничего не отправляется в Авито.</p>
+    {fastAccess.length > 0 && <section className="home-fast-access" aria-labelledby="fast-access-title"><div className="section-heading"><h2 id="fast-access-title">Недавние и избранные</h2><button className="text-button" type="button" onClick={() => onOpen('answers')}>Все ответы</button></div><div className="fast-access-list">{fastAccess.map((template) => <button className="fast-access-item" type="button" key={template.id} onClick={() => onUseTemplate(template.id)}><span><small>{categoryLabel(template.category)}</small><strong>{template.title}</strong></span><span aria-hidden="true">›</span></button>)}</div></section>}
+    {lastScenario && <section className="resume-card"><div><strong>Продолжить сценарий</strong><small>{({ new: 'Новый покупатель', delivery: 'Авито Доставка', pickup: 'Самовывоз', 'after-purchase': 'После покупки' } as Record<string, string>)[lastScenario.path] ?? 'Сценарий'} · статусы нужно проверить заново</small></div><button className="button button-secondary" type="button" onClick={onContinue}>Продолжить</button></section>}
   </>
 }

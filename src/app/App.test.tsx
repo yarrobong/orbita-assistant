@@ -3,18 +3,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 afterEach(() => { cleanup(); Reflect.deleteProperty(navigator, 'serviceWorker'); vi.unstubAllGlobals(); window.location.hash = '#/home' })
-beforeEach(() => { window.location.hash = '#/home' })
+beforeEach(() => { window.location.hash = '#/home'; localStorage.clear() })
 
 describe('app shell', () => {
   it('shows exactly three primary sections and marks Home active', () => {
     render(<App />)
 
-    expect(screen.getByRole('heading', { name: /orbita assistant/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Что нужно сделать?' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.getAllByRole('navigation')).toHaveLength(1)
     const nav = screen.getByRole('navigation', { name: 'Основная навигация' })
     expect(nav.querySelectorAll('button')).toHaveLength(3)
     expect(screen.getByRole('button', { name: 'Главная' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('region', { name: 'Выберите ситуацию' }).querySelectorAll('button')).toHaveLength(4)
     expect(screen.queryByRole('button', { name: 'Сценарии' })).not.toBeInTheDocument()
     expect(document.querySelector('.app-frame')).toHaveAttribute('data-app-base', '/orbita-assistant/')
   })
@@ -81,6 +82,15 @@ describe('app shell', () => {
     expect(screen.queryByText(/можете приезжать/i)).not.toBeInTheDocument()
   })
 
+  it('shows the eight named quick answer intents', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /Ответить покупателю/ }))
+    expect(screen.getAllByRole('heading', { name: 'Что спросил покупатель?' })).toHaveLength(2)
+    for (const label of ['Есть ли товар в наличии?', 'Можно ли доставкой?', 'Можно ли самовывозом?', 'Сделаете фотографии?', 'Подойдёт ли аксессуар?', 'Возможен ли торг?', 'Когда отправите?', 'Спасибо за покупку']) {
+      expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
+    }
+  })
+
   it('keeps the internal handover message behind an explicit audience switch', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /Самовывоз/ }))
@@ -126,8 +136,8 @@ describe('app shell', () => {
     const writeText = vi.fn().mockRejectedValue(new Error('permission denied'))
     vi.stubGlobal('navigator', { clipboard: { writeText } })
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: /Новый покупатель/ }))
-    fireEvent.click(screen.getByRole('button', { name: /Уточнить наличие/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Ответить покупателю/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Есть ли товар в наличии?' }))
     fireEvent.click(screen.getByRole('button', { name: 'Копировать' }))
 
     expect(await screen.findByText(/скопируйте вручную/i)).toBeInTheDocument()

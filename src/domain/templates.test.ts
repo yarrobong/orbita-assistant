@@ -25,6 +25,14 @@ describe('source-grounded template catalog', () => {
     expect(request.guardFlags).toContain('reviewNotRequested')
   })
 
+  it('allows safe intent questions to be copied before their future facts are known', () => {
+    for (const id of ['R20', 'auto-09', 'top-14', 'top-15']) {
+      const template = templateCatalog.find((item) => item.id === id)!
+      expect(template.guardFlags).toEqual([])
+      expect(canUseTemplate(template, initialFlowState('new')).allowed).toBe(true)
+    }
+  })
+
   it('requires verification only for the factual delivery and pickup confirmations', () => {
     const guards = (id: string) => templateCatalog.find((item) => item.id === id)!.guardFlags
 

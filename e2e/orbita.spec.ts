@@ -54,7 +54,7 @@ test('delivery accepts an independently checked status and keeps review gated by
 
 test('unverified stock stays neutral; an unavailable item needs a checked replacement', async ({ page }) => {
   await page.goto('./#/home')
-  await page.getByRole('button', { name: /Новый покупатель/ }).click()
+  await page.getByRole('button', { name: /Ответить покупателю/ }).click()
   await page.getByRole('button', { name: 'Уточнить наличие' }).click()
   await page.getByRole('textbox', { name: 'Какой товар проверили?' }).fill('Геймпад Quest')
   await expect(page.getByLabel('Текст сообщения')).toHaveValue(/Наличие конкретного экземпляра уточню/)
@@ -148,9 +148,9 @@ test('search, hash route reload, and narrow mobile view work without horizontal 
 
 test('template has a stable URL that survives reload and browser back', async ({ page }) => {
   await page.goto('./#/answers')
-  const firstCard = page.locator('.template-card').first()
+  const firstCard = page.locator('.template-row').first()
   const title = await firstCard.locator('h2').textContent()
-  await firstCard.getByRole('button', { name: 'Открыть и подготовить' }).click()
+  await firstCard.getByRole('button', { name: 'Подготовить' }).click()
   await expect(page).toHaveURL(/#\/template\/[\w%-]+$/u)
   await expect(page.locator('h1')).toHaveText(title!)
 
@@ -159,6 +159,17 @@ test('template has a stable URL that survives reload and browser back', async ({
   await page.goBack()
   await expect(page).toHaveURL(/#\/answers$/u)
   await expect(page.getByRole('heading', { name: 'Все ответы' })).toBeVisible()
+})
+
+test('quick answer opens a source template and records only its ID as recent', async ({ page }) => {
+  await page.goto('./#/quick')
+  await page.getByRole('button', { name: 'Сделаете фотографии?' }).click()
+  await expect(page).toHaveURL(/#\/template\/auto-10$/u)
+  await page.getByRole('button', { name: 'Копировать' }).click()
+  await expect(page.getByText('Скопировано')).toBeVisible()
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('orbita:recent-templates'))).toContain('auto-10')
+  await page.getByRole('navigation').getByRole('button', { name: 'Главная' }).click()
+  await expect(page.getByRole('button', { name: /Можно дополнительные фото/ })).toBeVisible()
 })
 
 test('home view has no WCAG A/AA axe violations', async ({ page }) => {

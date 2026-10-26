@@ -8,6 +8,9 @@ import FlowScreen from '../features/FlowScreen'
 import HomeScreen from '../features/HomeScreen'
 import SettingsScreen from '../features/SettingsScreen'
 import TemplateLibrary from '../features/TemplateLibrary'
+import QuickAnswers from '../features/QuickAnswers'
+import { copyText } from '../lib/clipboard'
+import { normalizeRecentIds, rememberTemplate } from '../lib/template-preferences'
 import { primarySectionFor, resolveRoute, routeHash, type AppRoute } from './routes'
 import '../styles/app.css'
 
@@ -42,17 +45,22 @@ const safeReadLastScenario = (): LastScenario | null => {
   } catch { return null }
 }
 
-function TemplateUse({ template, onBack }: { template: Template; onBack: () => void }) {
+const safeReadRecentIds = (): string[] => {
+  try { return normalizeRecentIds(JSON.parse(localStorage.getItem('orbita:recent-templates') ?? '[]')) } catch { return [] }
+}
+
+function TemplateUse({ template, onBack, onCopied }: { template: Template; onBack: () => void; onCopied: () => void }) {
   const path = template.category === 'pickup' ? 'pickup' : template.category === 'delivery' ? 'delivery' : 'new'
   const [state, setState] = useState(() => initialFlowState(path))
   const update = (event: Parameters<typeof transition>[1]) => setState((current) => transition(current, event))
-  return <section><button className="back-link" type="button" onClick={onBack}>← Все ответы</button><header className="page-heading"><p className="eyebrow">ШАБЛОН ИЗ БАЗЫ</p><h1>{template.title}</h1></header><CopyComposer template={template} state={state} onFieldChange={(field, value) => update({ type: 'set-field', field, value })} onConfirm={(flag, value) => update({ type: 'confirm', flag, value })} onAudienceChange={(audience) => update({ type: 'set-audience', audience })} /></section>
+  return <section><button className="back-link" type="button" onClick={onBack}>← Все ответы</button><header className="page-heading"><p className="eyebrow">ШАБЛОН ИЗ БАЗЫ</p><h1>{template.title}</h1></header><CopyComposer template={template} state={state} onFieldChange={(field, value) => update({ type: 'set-field', field, value })} onConfirm={(flag, value) => update({ type: 'confirm', flag, value })} onAudienceChange={(audience) => update({ type: 'set-audience', audience })} onCopied={onCopied} /></section>
 }
 
 function AppShell() {
   const [route, setRoute] = useState<AppRoute>(() => currentRoute().route)
   const [query, setQuery] = useState('')
   const [favorites, setFavorites] = useState(safeReadFavorites)
+  const [recentIds, setRecentIds] = useState(safeReadRecentIds)
   const [lastScenario, setLastScenario] = useState<LastScenario | null>(safeReadLastScenario)
   const [liveFlow, setLiveFlow] = useState<FlowState | null>(() => {
     const initial = currentRoute().route
@@ -74,6 +82,7 @@ function AppShell() {
     return () => window.removeEventListener('hashchange', sync)
   }, [])
   useEffect(() => { localStorage.setItem('orbita:favorites', JSON.stringify(favorites)) }, [favorites])
+  useEffect(() => { localStorage.setItem('orbita:recent-templates', JSON.stringify(normalizeRecentIds(recentIds))) }, [recentIds])
   useEffect(() => { if (lastScenario) localStorage.setItem('orbita:last-scenario', JSON.stringify(lastScenario)) }, [lastScenario])
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
@@ -111,6 +120,7 @@ function AppShell() {
   }
   const open = (id: string) => {
     if (id === 'templates' || id === 'answers') { navigate({ kind: 'answers' }); return }
+    if (id === 'quick') { navigate({ kind: 'quick' }); return }
     const path = (['new', 'delivery', 'pickup', 'after-purchase'].includes(id) ? id : 'new') as FlowPath
     const stage = ({ new: 'N0', delivery: 'D0', pickup: 'P0', 'after-purchase': 'AFTER' } as Record<FlowPath, string>)[path]
     const next = { path: id, stage, reviewRequested: false, issueOpen: false }
@@ -120,6 +130,7 @@ function AppShell() {
     navigate({ kind: 'flow', path })
   }
   const favorite = (id: string) => setFavorites((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id])
+  const markTemplateUsed = (id: string) => setRecentIds((current) => rememberTemplate(current, id))
   const selected = route.kind === 'template' ? templateCatalog.find((template) => template.id === route.id) : undefined
   const navRoute = primarySectionFor(route)
   const handleGlobalSearch = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); navigate({ kind: 'answers' }) }
@@ -134,12 +145,12 @@ function AppShell() {
       <button className="settings-button" aria-label="Настройки" type="button" onClick={() => navigate({ kind: 'settings' })}>⚙</button></header>
       {updateWorker && <aside className="update-notice" role="status"><p>Доступно обновление. Скопируйте введённый текст перед перезапуском.</p><button className="button button-primary" type="button" onClick={() => updateWorker.postMessage({ type: 'ACTIVATE_UPDATE' })}>Обновить приложение</button><button className="update-dismiss" type="button" onClick={() => setUpdateWorker(null)}>Позже</button></aside>}
       <main className="main-content">
-        {route.kind === 'home' && <HomeScreen onOpen={open} lastScenario={lastScenario} onContinue={() => { if (lastScenario) navigate({ kind: 'flow', path: lastScenario.path as FlowPath }) }} />}
-        {route.kind === 'quick' && <section><header className="page-heading"><p className="eyebrow">БЫСТРЫЙ ОТВЕТ</p><h1>Что спросил покупатель?</h1></header></section>}
+        {route.kind === 'home' && <HomeScreen onOpen={open} onUseTemplate={(id) => navigate({ kind: 'template', id })} favorites={favorites} recentIds={recentIds} lastScenario={lastScenario} onContinue={() => { if (lastScenario) navigate({ kind: 'flow', path: lastScenario.path as FlowPath }) }} />}
+        {route.kind === 'quick' && <section><header className="page-heading"><p className="eyebrow">БЫСТРЫЙ ОТВЕТ</p><h1>Что спросил покупатель?</h1></header><QuickAnswers onChoose={(id) => navigate({ kind: 'template', id })} /></section>}
         {route.kind === 'flow' && <FlowScreen kind={route.path} flowState={liveFlow?.path === route.path ? liveFlow : initialFlowState(route.path)} onFlowStateChange={setLiveFlow} initialStage={lastScenario?.path === route.path ? lastScenario.stage : undefined} initialReviewRequested={lastScenario?.path === route.path && lastScenario.reviewRequested} initialIssueOpen={lastScenario?.path === route.path && lastScenario.issueOpen} onBack={() => navigate({ kind: 'home' })} onStageChange={(path, stage) => setLastScenario((current) => ({ path, stage, reviewRequested: current?.path === path && current.reviewRequested, issueOpen: current?.path === path && current.issueOpen }))} onStatusChange={(state) => setLastScenario({ path: state.path, stage: state.stage, reviewRequested: state.flags.reviewRequested, issueOpen: state.flags.issueOpen })} />}
-        {route.kind === 'answers' && <TemplateLibrary favorites={favorites} query={query} onQueryChange={setQuery} onFavorite={favorite} onUse={(id) => navigate({ kind: 'template', id })} />}
-        {route.kind === 'template' && selected && <TemplateUse template={selected} onBack={() => navigate({ kind: 'answers' })} />}
-        {route.kind === 'settings' && <SettingsScreen onClear={() => { setFavorites([]); setLastScenario(null); setLiveFlow(null); localStorage.removeItem('orbita:last-scenario'); navigate({ kind: 'home' }) }} />}
+        {route.kind === 'answers' && <TemplateLibrary favorites={favorites} recentIds={recentIds} query={query} onQueryChange={setQuery} onFavorite={favorite} onUse={(id) => navigate({ kind: 'template', id })} onCopy={(_id, text) => copyText(text)} onCopied={markTemplateUsed} />}
+        {route.kind === 'template' && selected && <TemplateUse template={selected} onBack={() => navigate({ kind: 'answers' })} onCopied={() => markTemplateUsed(selected.id)} />}
+        {route.kind === 'settings' && <SettingsScreen onClear={() => { setFavorites([]); setRecentIds([]); setLastScenario(null); setLiveFlow(null); localStorage.removeItem('orbita:last-scenario'); localStorage.removeItem('orbita:recent-templates'); navigate({ kind: 'home' }) }} />}
       </main>
     </div>
   </div>
