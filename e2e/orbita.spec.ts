@@ -363,3 +363,59 @@ test('service worker caches app shell and permits offline reload', async ({ page
   await page.reload()
   await expect(page.getByRole('button', { name: 'Убрать «Есть белые геймпады Xbox» из избранного' })).toBeVisible()
 })
+
+test('Google Workspace palette is applied to the app and PWA with accessible contrast', async ({ page }) => {
+  await page.goto('./#/flow/delivery')
+  await page.getByRole('group', { name: 'Ситуации доставки' }).getByRole('button', { name: 'Заказ отправлен' }).click()
+  const palette = await page.evaluate(() => {
+    const root = getComputedStyle(document.documentElement)
+    const button = document.querySelector('.button-primary')
+    const contrast = (foreground: string, background: string) => {
+      const luminance = (value: string) => {
+        const hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/iu)?.[1]
+        const channels = hex
+          ? (hex.length === 3 ? [...hex].map((part) => Number.parseInt(part + part, 16)) : [0, 2, 4].map((index) => Number.parseInt(hex.slice(index, index + 2), 16)))
+          : value.match(/[\d.]+/gu)?.slice(0, 3).map(Number) ?? []
+        const linear = channels.map((channel) => {
+          const normalized = channel / 255
+          return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+        })
+        return 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!
+      }
+      const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a)
+      return (values[0]! + 0.05) / (values[1]! + 0.05)
+    }
+    return {
+      page: root.getPropertyValue('--surface-page').trim(),
+      surface: root.getPropertyValue('--surface-primary').trim(),
+      selected: root.getPropertyValue('--surface-selected').trim(),
+      textPrimary: root.getPropertyValue('--text-primary').trim(),
+      textSecondary: root.getPropertyValue('--text-secondary').trim(),
+      border: root.getPropertyValue('--border-subtle').trim(),
+      accent: root.getPropertyValue('--brand-primary').trim(),
+      bodyBackground: getComputedStyle(document.documentElement).backgroundColor,
+      buttonBackground: button ? getComputedStyle(button).backgroundColor : '',
+      buttonText: button ? getComputedStyle(button).color : '',
+      primaryContrast: contrast(root.getPropertyValue('--text-primary'), 'rgb(248, 250, 253)'),
+      secondaryContrast: contrast('rgb(95, 99, 104)', 'rgb(248, 250, 253)'),
+      selectedContrast: contrast(root.getPropertyValue('--color-accent-dark'), root.getPropertyValue('--surface-selected')),
+      buttonContrast: button ? contrast(getComputedStyle(button).color, getComputedStyle(button).backgroundColor) : 0,
+    }
+  })
+  expect(palette).toMatchObject({
+    page: '#f8fafd', surface: '#fff', selected: '#e8f0fe',
+    textPrimary: '#202124', textSecondary: '#5f6368', border: '#dadce0', accent: '#1a73e8',
+    bodyBackground: 'rgb(248, 250, 253)', buttonBackground: 'rgb(26, 115, 232)', buttonText: 'rgb(255, 255, 255)',
+  })
+  expect(palette.primaryContrast).toBeGreaterThanOrEqual(7)
+  expect(palette.secondaryContrast).toBeGreaterThanOrEqual(4.5)
+  expect(palette.selectedContrast).toBeGreaterThanOrEqual(4.5)
+  expect(palette.buttonContrast).toBeGreaterThanOrEqual(4.5)
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#F8FAFD')
+  const manifest = await page.evaluate(async () => (await (await fetch('/orbita-assistant/manifest.webmanifest')).json()) as { background_color: string; theme_color: string })
+  expect(manifest).toMatchObject({ background_color: '#F8FAFD', theme_color: '#F8FAFD' })
+  const stylesheet = await page.evaluate(() => [...document.styleSheets].map((sheet) => sheet.href).find((href) => href?.includes('/assets/')))
+  expect(stylesheet).toBeTruthy()
+  const cssText = await (await page.request.get(stylesheet!)).text()
+  expect(cssText).not.toMatch(/#(?:f6e9e4|a3472b|7a351f|efcdbf|fffaf7|f9e9e0|e1b4a1|fff3ed|fff9f5|765132|8b431f|d7a288|fff7ef|944522|bd572f|fbefea|f6f7f7)/iu)
+})
