@@ -119,12 +119,12 @@
 - Consumes: `canUseTemplate`, `renderTemplate`, existing neutral alternatives, flow stage data, direct stage selection and confirmation callbacks.
 - Produces: read-only message preview by default with explicit edit action; immediately visible copy action; desktop scenario master-detail and mobile sequential stage/composer; existing private/internal copy protections.
 
-- [ ] **Step 1: Write failing component tests** for preview-first rendering, edit-on-request, primary copy visibility, neutral alternative copyability, unresolved placeholder rejection, missing pickup data neutral fallback, contact excluded without explicit consent, and internal audience label.
-- [ ] **Step 2: Run `npm test -- src/components/CopyComposer.test.tsx src/features/FlowScreen.test.tsx`**; expected: preview/edit behavior assertions fail against default textarea and repeated badges/disclaimers.
-- [ ] **Step 3: Implement the compact composer and scenario list**; preserve all stage labels, stage independence, internal-message separation and optional detail fields.
-- [ ] **Step 4: Run component tests and existing flow unit tests**; expected: all business-safety and rendering contracts pass.
-- [ ] **Step 5: Run the focused flow Playwright tests**; expected: all ten delivery and nine pickup stages remain available, selection immediately updates copyable text, and private contact remains opt-in.
-- [ ] **Step 6: Commit** as `feat: streamline scenario composer and stage selection`.
+- [x] **Step 1: Write failing component tests** for preview-first rendering, edit-on-request, primary copy visibility, neutral alternative copyability, unresolved placeholder rejection, missing pickup data neutral fallback, contact excluded without explicit consent, and internal audience label.
+- [x] **Step 2: Run `npm test -- src/components/CopyComposer.test.tsx src/features/FlowScreen.test.tsx`**; expected: preview/edit behavior assertions fail against default textarea and repeated badges/disclaimers.
+- [x] **Step 3: Implement the compact composer and scenario list**; preserve all stage labels, stage independence, internal-message separation and optional detail fields.
+- [x] **Step 4: Run component tests and existing flow unit tests**; expected: all business-safety and rendering contracts pass.
+- [x] **Step 5: Run the focused flow Playwright tests**; expected: all ten delivery and nine pickup stages remain available, selection immediately updates copyable text, and private contact remains opt-in.
+- [x] **Step 6: Commit** as `feat: streamline scenario composer and stage selection`.
 
 ## Task 5: Finish adaptive layouts and verify keyboard, touch and visual states
 

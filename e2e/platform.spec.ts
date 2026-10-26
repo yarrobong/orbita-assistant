@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('Safari layout and basic scenarios work at phone and desktop widths', async ({ page }) => {
   await page.goto('./#/home')
-  await expect(page.getByRole('heading', { name: 'Что нужно сделать?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Подготовить сообщение' })).toBeVisible()
   for (const size of [{ width: 320, height: 740 }, { width: 390, height: 844 }, { width: 844, height: 390 }, { width: 1280, height: 800 }]) {
     await page.setViewportSize(size)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(size.width)
@@ -10,5 +10,6 @@ test('Safari layout and basic scenarios work at phone and desktop widths', async
   await page.getByRole('navigation').getByRole('button', { name: 'Главная' }).click()
   await page.getByRole('button', { name: /Самовывоз/ }).click()
   await expect(page.getByRole('heading', { name: 'Самовывоз', exact: true })).toBeVisible()
+  await page.getByRole('group', { name: 'Ситуации самовывоза' }).getByRole('button', { name: 'Интересуется самовывозом' }).click()
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
 })

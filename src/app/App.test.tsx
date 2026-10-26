@@ -45,12 +45,12 @@ describe('app shell', () => {
     window.location.hash = '#/template/top-02'
     const { unmount } = render(<App />)
 
-    expect(screen.getAllByRole('heading', { name: 'Доставка — оформление' })).toHaveLength(3)
+    expect(screen.getAllByRole('heading', { name: 'Доставка — оформление' })).toHaveLength(2)
     expect(screen.getByRole('button', { name: 'Ответы' })).toHaveAttribute('aria-current', 'page')
     unmount()
 
     render(<App />)
-    expect(screen.getAllByRole('heading', { name: 'Доставка — оформление' })).toHaveLength(3)
+    expect(screen.getAllByRole('heading', { name: 'Доставка — оформление' })).toHaveLength(2)
   })
 
   it('routes an unknown template ID to Answers safely', async () => {

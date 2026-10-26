@@ -43,7 +43,7 @@ test('all nine pickup situations are independently available and the coordinatio
     await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
   }
   await stages.getByRole('button', { name: 'Уточнить с человеком на точке' }).click()
-  await expect(page.getByText('Внутреннее сообщение человеку на точке')).toBeVisible()
+  await expect(page.getByText('Внутреннее сообщение', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
   await stages.getByRole('button', { name: 'Интересуется самовывозом' }).click()
   await expect(page.getByLabel('Текст сообщения')).toContainText(/уточню, получится ли организовать выдачу/u)
@@ -136,6 +136,19 @@ test('scenario copy stays reachable on a short mobile screen while editing', asy
   await expect(page.getByText('Скопировано')).toBeVisible()
 })
 
+test('mobile delivery opens the selected message without keeping the full stage list above it', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('./#/flow/delivery')
+  const situations = page.getByRole('group', { name: 'Ситуации доставки' })
+  await expect(situations).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Копировать' })).toHaveCount(0)
+  await situations.getByRole('button', { name: 'Заказ отправлен' }).click()
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeVisible()
+  await expect(situations).toBeHidden()
+  await page.getByRole('button', { name: /Выбрать ситуацию/u }).click()
+  await expect(situations).toBeVisible()
+})
+
 test('search, hash route reload, and narrow mobile view work without horizontal scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 })
   await page.goto('./#/home')
@@ -147,7 +160,7 @@ test('search, hash route reload, and narrow mobile view work without horizontal 
   await page.getByRole('searchbox', { name: 'Поиск по ответам' }).fill('quest 3s')
   await page.getByRole('option').first().click()
   await expect(page.getByRole('heading', { name: 'Уточнить модель' }).first()).toBeVisible()
-  await expect(page.getByLabel('Текст сообщения')).toHaveValue(/Quest 3S/)
+  await expect(page.getByLabel('Текст сообщения')).toContainText(/Quest 3S/u)
   await page.goto('./#/flow/delivery')
   await page.reload()
   await expect(page.getByRole('heading', { name: 'Авито Доставка' })).toBeVisible()
