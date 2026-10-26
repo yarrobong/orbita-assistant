@@ -61,14 +61,14 @@ export function transition(state: FlowState, event: FlowEvent): FlowState {
     if (event.value && !canSetFlag(state, event.flag)) return state
     return {
       ...state,
-      stage: event.flag === 'issueOpen' ? (event.value ? 'DX' : state.path === 'delivery' ? 'D0' : state.path === 'pickup' ? 'P0' : state.path === 'new' ? 'N0' : 'AFTER') : state.stage,
+      stage: event.flag === 'issueOpen' ? (event.value ? (state.path === 'after-purchase' ? 'AFTER_ISSUE' : 'DX') : state.path === 'delivery' ? 'D0' : state.path === 'pickup' ? 'P0' : state.path === 'new' ? 'N0' : 'AFTER_REVIEW') : state.stage,
       flags: { ...state.flags, [event.flag]: event.value },
     }
   }
 
   if (event.type === 'set-audience') return { ...state, audience: event.audience }
   if (event.type === 'set-stage') return canEnterStage(state, event.stage)
-    ? { ...state, stage: event.stage, audience: state.path === 'pickup' && event.stage === 'P2' ? 'handover' : 'buyer' }
+    ? { ...state, stage: event.stage, audience: state.path === 'pickup' && ['P2', 'P6'].includes(event.stage) ? 'handover' : 'buyer' }
     : state
 
   if (event.type === 'mark-review-requested') {

@@ -9,6 +9,6 @@ test('Safari layout and basic scenarios work at phone and desktop widths', async
   }
   await page.getByRole('navigation').getByRole('button', { name: 'Главная' }).click()
   await page.getByRole('button', { name: /Самовывоз/ }).click()
-  await expect(page.getByRole('heading', { name: 'Самовывоз' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Самовывоз', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
 })

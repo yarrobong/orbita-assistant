@@ -96,4 +96,26 @@ describe('CopyComposer', () => {
     fireEvent.click(include)
     expect(screen.getByLabelText('Текст сообщения')).toHaveValue('Выдающий Мария, телефон +7 900 123-45-67.')
   })
+
+  it('uses the contact-free message when an optional handover contact is not included', () => {
+    const template: Template = {
+      ...basicTemplate,
+      id: 'pickup.address',
+      category: 'pickup',
+      body: 'Адрес: {{address}}. Контакт: {{handoverName}}, {{handoverPhone}}.',
+      withoutContactBody: 'Адрес: {{address}}. Напишите перед выездом, чтобы уточнить детали.',
+      requiredFields: ['address'],
+      guardFlags: ['contactPermission'],
+      neutralAlternative: 'Я уточню адрес и инструкции и напишу вам.',
+    }
+    let state = initialFlowState('pickup')
+    state = transition(state, { type: 'set-field', field: 'address', value: 'Введённый адрес' })
+    const onFieldChange = (field: string, value: string) => { state = transition(state, { type: 'set-field', field, value }) }
+    render(<CopyComposer template={template} state={state} onFieldChange={onFieldChange} onConfirm={() => {}} showDetails />)
+
+    expect(screen.getByLabelText('Текст сообщения')).toHaveValue('Адрес: Введённый адрес. Напишите перед выездом, чтобы уточнить детали.')
+    expect(screen.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+    expect(screen.getByLabelText('Подтверждаю разрешение передать контакт')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Добавить контакт выдающего в сообщение')).not.toBeInTheDocument()
+  })
 })

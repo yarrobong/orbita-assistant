@@ -42,7 +42,7 @@ const safeReadLastScenario = (): LastScenario | null => {
     if (!value || typeof value !== 'object') return null
     const candidate = value as Record<string, unknown>
     const allowedPaths = ['new', 'delivery', 'pickup', 'after-purchase']
-    if (typeof candidate.path !== 'string' || !allowedPaths.includes(candidate.path) || typeof candidate.stage !== 'string' || !/^(N[0-2]|D[0-7]|P[0-7]|AFTER|HELP|REVIEW|DONE|DX|PX)$/u.test(candidate.stage)) return null
+    if (typeof candidate.path !== 'string' || !allowedPaths.includes(candidate.path) || typeof candidate.stage !== 'string' || !/^(N[0-2]|D[0-9]|P[0-8]|AFTER|AFTER_REVIEW|AFTER_ISSUE|HELP|REVIEW|DONE|DX|PX)$/u.test(candidate.stage)) return null
     return { path: candidate.path, stage: candidate.stage, reviewRequested: candidate.reviewRequested === true, issueOpen: candidate.issueOpen === true }
   } catch { return null }
 }
@@ -73,7 +73,16 @@ function AppShell() {
   const [lastScenario, setLastScenario] = useState<LastScenario | null>(safeReadLastScenario)
   const [liveFlow, setLiveFlow] = useState<FlowState | null>(() => {
     const initial = currentRoute().route
-    return initial.kind === 'flow' ? initialFlowState(initial.path) : null
+    if (initial.kind !== 'flow') return null
+    const flow = initialFlowState(initial.path)
+    const saved = safeReadLastScenario()
+    if (saved?.path === initial.path) {
+      flow.stage = saved.stage
+      flow.flags.reviewRequested = saved.reviewRequested
+      flow.flags.issueOpen = saved.issueOpen
+      if (initial.path === 'after-purchase' && saved.issueOpen) flow.stage = 'AFTER_ISSUE'
+    }
+    return flow
   })
   const [updateWorker, setUpdateWorker] = useState<ServiceWorker | null>(null)
   useEffect(() => {
@@ -147,7 +156,7 @@ function AppShell() {
     if (id === 'templates' || id === 'answers') { navigate({ kind: 'answers' }); return }
     if (id === 'quick') { navigate({ kind: 'quick' }); return }
     const path = (['new', 'delivery', 'pickup', 'after-purchase'].includes(id) ? id : 'new') as FlowPath
-    const stage = ({ new: 'N0', delivery: 'D0', pickup: 'P0', 'after-purchase': 'AFTER' } as Record<FlowPath, string>)[path]
+    const stage = ({ new: 'N0', delivery: 'D0', pickup: 'P0', 'after-purchase': 'AFTER_REVIEW' } as Record<FlowPath, string>)[path]
     const next = { path: id, stage, reviewRequested: false, issueOpen: false }
     setLiveFlow(initialFlowState(path))
     setLastScenario(next)

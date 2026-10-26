@@ -64,13 +64,14 @@ describe('app shell', () => {
   it('keeps an in-progress pickup draft while visiting Answers and returning', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /Самовывоз/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Время' }))
-    fireEvent.change(screen.getByRole('textbox', { name: 'Дата' }), { target: { value: '30 октября' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Передать адрес и инструкции' }))
+    fireEvent.click(screen.getByText('Детали и контакт'))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Адрес' }), { target: { value: 'Сохранённый адрес' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ответы' }))
     fireEvent.click(screen.getByRole('button', { name: 'Главная' }))
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }))
 
-    expect(screen.getByRole('textbox', { name: 'Дата' })).toHaveValue('30 октября')
+    expect(screen.getByRole('textbox', { name: 'Адрес' })).toHaveValue('Сохранённый адрес')
   })
 
   it('opens a neutral pickup flow without promising a confirmed visit', () => {
@@ -78,7 +79,7 @@ describe('app shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /Самовывоз/ }))
 
     expect(screen.getByRole('heading', { name: 'Самовывоз' })).toBeInTheDocument()
-    expect(screen.getByText(/сначала уточню возможность выдачи/i)).toBeInTheDocument()
+    expect(screen.getByText(/уточню, получится ли организовать выдачу/i)).toBeInTheDocument()
     expect(screen.queryByText(/можете приезжать/i)).not.toBeInTheDocument()
   })
 
@@ -114,15 +115,8 @@ describe('app shell', () => {
   it('keeps the internal handover message behind an explicit audience switch', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /Самовывоз/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Время' }))
-    fireEvent.change(screen.getByRole('textbox', { name: 'Товар' }), { target: { value: 'Ремешок' } })
-    fireEvent.change(screen.getByRole('textbox', { name: 'Дата' }), { target: { value: '30 октября' } })
-    fireEvent.change(screen.getByRole('textbox', { name: 'Время' }), { target: { value: '17:00' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Согласование' }))
-    expect(screen.queryByText(/Покупатель хочет забрать/)).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Человеку на точке' }))
-    expect(screen.getByText(/Покупатель хочет забрать/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Уточнить с человеком на точке' }))
+    expect(screen.getByLabelText('Текст сообщения').textContent).toMatch(/Покупатель интересуется самовывозом/u)
     expect(screen.getByText('Внутреннее сообщение')).toBeInTheDocument()
   })
 

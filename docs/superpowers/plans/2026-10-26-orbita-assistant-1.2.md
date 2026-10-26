@@ -55,11 +55,11 @@
 
 **Files:** `src/data/scenario-stages.ts`, `src/data/scenario-stages.test.ts`, `src/features/FlowScreen.tsx`, `src/styles/app.css`, `src/app/App.tsx`, `src/app/App.test.tsx`, `e2e/orbita.spec.ts`.
 
-- [ ] Add failing Playwright tests for all delivery and pickup situations, direct late-stage selection, immediate copy, neutral meeting fallback, review-from-home, issue-first review guidance, and fast in-place switching.
-- [ ] Implement compact stage choices above the ready message and keep optional details below it; remove mandatory checklists and sent-message confirmations from scenario progression.
-- [ ] Make contact permission and inclusion explicit, separate, and local to the current tab; keep optional “already requested review” non-blocking.
-- [ ] Run focused Playwright and axe checks; inspect short mobile heights and focused edit layout.
-- [ ] Run unit tests; commit `feat: simplify ORBITA delivery and pickup flows`.
+- [x] Add failing Playwright tests for all delivery and pickup situations, direct late-stage selection, immediate copy, neutral meeting fallback, review-from-home, issue-first review guidance, and fast in-place switching.
+- [x] Implement compact stage choices above the ready message and keep optional details below it; remove mandatory checklists and sent-message confirmations from scenario progression.
+- [x] Make contact permission and inclusion explicit, separate, and local to the current tab; keep optional “already requested review” non-blocking.
+- [x] Run focused Playwright and axe checks; inspect short mobile heights and focused edit layout.
+- [x] Run unit tests; commit `feat: simplify ORBITA delivery and pickup flows`.
 
 ### Task 4: Full acceptance, performance, and publication
 

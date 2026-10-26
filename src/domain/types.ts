@@ -28,6 +28,7 @@ export type Template = {
   source: SourceCollection
   usage: string
   neutralAlternative?: string
+  withoutContactBody?: string
 }
 
 export type FlowFlags = Record<FlagName, boolean>

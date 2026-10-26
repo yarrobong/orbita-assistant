@@ -51,14 +51,17 @@ export default function CopyComposer({
   const [copyStatus, setCopyStatus] = useState<{ source: string; message: string } | null>(null)
   const [includeHandoverContact, setIncludeHandoverContact] = useState(false)
   const [editing, setEditing] = useState(!showEditToggle)
-  const rendered = renderTemplate(template, state.fields)
-  const guardResult = canUseTemplate(template, state)
   const needsContactPermission = template.guardFlags.includes('contactPermission')
     || contactFields.some((field) => template.requiredFields.includes(field) || template.body.includes(`{{${field}}}`))
   const contactReady = state.flags.contactPermission
     && Boolean(state.fields.handoverName?.trim() && state.fields.handoverPhone?.trim())
   const contactIncluded = needsContactPermission && contactReady && includeHandoverContact
-  const needsNeutral = !rendered.copyable || (needsContactPermission && !contactIncluded)
+  const renderedTemplate = needsContactPermission && !contactIncluded && template.withoutContactBody
+    ? { ...template, body: template.withoutContactBody, requiredFields: template.requiredFields.filter((field) => !contactFields.includes(field)) }
+    : template
+  const rendered = renderTemplate(renderedTemplate, state.fields)
+  const guardResult = canUseTemplate(template, state)
+  const needsNeutral = !rendered.copyable || (needsContactPermission && !contactIncluded && !template.withoutContactBody)
   const neutral = template.neutralAlternative ?? neutralAlternatives[template.category](template.audience)
   const sourceText = needsNeutral ? neutral : rendered.text
   const editedText = draft?.templateId === template.id && draft.source === sourceText ? draft.text : sourceText
