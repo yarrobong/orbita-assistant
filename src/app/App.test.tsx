@@ -15,7 +15,7 @@ describe('app shell', () => {
     const nav = screen.getByRole('navigation', { name: 'Основная навигация' })
     expect(nav.querySelectorAll('button')).toHaveLength(4)
     expect(screen.getByRole('button', { name: 'Главная' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('region', { name: 'Выберите ситуацию' }).querySelectorAll('button')).toHaveLength(4)
+    expect(screen.getByRole('region', { name: 'Выберите ситуацию' }).querySelectorAll('button')).toHaveLength(5)
     expect(screen.queryByRole('button', { name: 'Сценарии' })).not.toBeInTheDocument()
     expect(document.querySelector('.app-frame')).toHaveAttribute('data-app-base', '/orbita-assistant/')
   })
