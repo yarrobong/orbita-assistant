@@ -48,18 +48,21 @@ describe('source-grounded template catalog', () => {
     expect(guards('scenario-18')).toContain('buyerNotified')
   })
 
-  it('keeps inventory guard metadata without requiring a second checkbox after template selection', () => {
+  it('keeps inventory factual claims neutral until the corresponding situation is selected', () => {
     const available = templateCatalog.find((item) => item.id === 'R01')!
     const unavailable = templateCatalog.find((item) => item.id === 'R07')!
     let state = initialFlowState('new')
     expect(available.guardFlags).toContain('stockAvailable')
     expect(unavailable.guardFlags).toContain('stockUnavailable')
-    expect(canUseTemplate(available, state).allowed).toBe(true)
-    expect(canUseTemplate(unavailable, state).allowed).toBe(true)
+    expect(canUseTemplate(available, state).situationAllowed).toBe(false)
+    expect(canUseTemplate(unavailable, state).situationAllowed).toBe(false)
     state = transition(state, { type: 'set-field', field: 'product', value: 'Геймпад' })
     state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'available' })
-    state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
+    state = transition(state, { type: 'set-stage', stage: 'N1' })
     expect(canUseTemplate(available, state).allowed).toBe(true)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
+    state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'unavailable' })
+    expect(canUseTemplate(available, state).allowed).toBe(false)
     expect(canUseTemplate(unavailable, state).allowed).toBe(true)
   })
 

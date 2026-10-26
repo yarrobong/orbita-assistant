@@ -36,7 +36,14 @@ export default function FlowScreen({ kind, initialStage, initialReviewRequested,
   }
   const change = (field: string, value: string) => update({ type: 'set-field', field, value })
   const stageChange = (next: string) => update({ type: 'set-stage', stage: next })
-  const reviewChoice = (next: 'AFTER_REVIEW' | 'AFTER_ISSUE') => stageChange(next)
+  const reviewChoice = (next: 'AFTER_REVIEW' | 'AFTER_ISSUE') => {
+    if (next === 'AFTER_ISSUE') update({ type: 'confirm', flag: 'issueOpen', value: true })
+    else if (state.flags.issueOpen) update({ type: 'confirm', flag: 'issueOpen', value: false })
+    else stageChange(next)
+  }
+  const isReviewStage = (path === 'after-purchase' && stage !== 'AFTER_ISSUE')
+    || (path === 'delivery' && stage === 'D8')
+    || (path === 'pickup' && stage === 'P8')
 
   return <section className="flow-screen" aria-labelledby="flow-title">
     <button className="back-link" type="button" onClick={onBack}>← Главная</button>
@@ -64,6 +71,16 @@ export default function FlowScreen({ kind, initialStage, initialReviewRequested,
       </div>
     </>}
 
-    {active && <CopyComposer key={`${path}-${stage}-${active.id}`} template={active} state={state} onFieldChange={change} onConfirm={(flag, value) => update({ type: 'confirm', flag, value })} onCopied={path === 'after-purchase' && state.stage === 'AFTER_REVIEW' ? () => update({ type: 'mark-review-requested' }) : undefined} showGuardControls={false} showDetails={path !== 'new' && (active.requiredFields.length > 0 || active.guardFlags.includes('contactPermission'))} showEditToggle={path !== 'new'} />}
+    {active && <>
+      <CopyComposer key={`${path}-${stage}-${active.id}`} template={active} state={state} onFieldChange={change} onConfirm={(flag, value) => update({ type: 'confirm', flag, value })} showGuardControls={false} showDetails={path !== 'new' && (active.requiredFields.length > 0 || active.guardFlags.includes('contactPermission'))} showEditToggle={path !== 'new'} />
+      {isReviewStage && <button
+        className="text-button review-requested-toggle"
+        type="button"
+        aria-pressed={state.flags.reviewRequested}
+        onClick={() => update(state.flags.reviewRequested
+          ? { type: 'confirm', flag: 'reviewRequested', value: false }
+          : { type: 'mark-review-requested' })}
+      >{state.flags.reviewRequested ? 'Отметка об отзыве поставлена' : 'Уже попросил отзыв'}</button>}
+    </>}
   </section>
 }

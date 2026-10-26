@@ -130,14 +130,39 @@ function canSetFlag(state: FlowState, flag: keyof FlowFlags): boolean {
 
 export function canUseTemplate(template: Template, state: FlowState): GuardResult {
   const reasons: string[] = []
+  const audienceAllowed = template.audience === state.audience
   if (template.audience !== state.audience) {
     reasons.push(template.audience === 'handover' ? 'Переключите аудиторию на «Человеку на точке».' : 'Этот текст предназначен покупателю.')
   }
-  if (template.guardFlags.includes('handoverContext') && state.path !== 'pickup') {
+  const contextAllowed = !template.guardFlags.includes('handoverContext') || state.path === 'pickup'
+  if (!contextAllowed) {
     reasons.push('Это внутреннее сообщение доступно только в сценарии самовывоза.')
   }
-
-  return { allowed: reasons.length === 0, reasons }
+  const factualFlags = template.guardFlags.filter((flag) => [
+    'stockConfirmed', 'deliveryAvailable', 'orderVerified', 'shippedVerified', 'arrivedVerified',
+    'receivedVerified', 'handoverConfirmed', 'handoverCompleted', 'addressConfirmed', 'stockAvailable', 'stockUnavailable',
+    'variantChecked', 'compatibilityChecked', 'priceConfirmed', 'termsConfirmed', 'noIssueOpen',
+  ].includes(flag))
+  const situationAllowed = factualFlags.every((flag) => {
+    if (flag === 'noIssueOpen') return !state.flags.issueOpen
+    if (flag === 'orderVerified') return state.path === 'delivery' && state.stage === 'D2'
+    if (flag === 'shippedVerified') return state.path === 'delivery' && state.stage === 'D4'
+    if (flag === 'arrivedVerified') return state.path === 'delivery' && state.stage === 'D6'
+    if (flag === 'receivedVerified') return (state.path === 'delivery' && ['D7', 'D8'].includes(state.stage)) || (state.path === 'pickup' && ['P7', 'P8'].includes(state.stage)) || (state.path === 'after-purchase' && state.stage === 'AFTER_REVIEW')
+    if (flag === 'deliveryAvailable') return state.path === 'delivery' && ['D0', 'D1'].includes(state.stage)
+    if (flag === 'handoverConfirmed' || flag === 'addressConfirmed') return state.path === 'pickup' && ['P4', 'P5'].includes(state.stage)
+    if (flag === 'handoverCompleted') return state.path === 'pickup' && state.stage === 'P7'
+    if (flag === 'stockAvailable') return state.path === 'new' && state.stage === 'N1' && state.fields.stockStatus === 'available'
+    if (flag === 'stockUnavailable') return state.path === 'new' && state.stage === 'N1' && state.fields.stockStatus === 'unavailable'
+    if (flag === 'stockConfirmed') return (state.path === 'new' && state.stage === 'N1' && Boolean(state.fields.stockStatus)) || (state.path === 'pickup' && ['P3', 'P4', 'P5'].includes(state.stage))
+    if (flag === 'variantChecked') return state.path === 'new' && state.stage === 'N1' && Boolean(state.fields.variant?.trim())
+    if (flag === 'compatibilityChecked') return state.path === 'new' && state.stage === 'N1'
+    if (flag === 'priceConfirmed') return state.path === 'new' && state.stage === 'N1' && Boolean(state.fields.price?.trim())
+    if (flag === 'termsConfirmed') return state.path === 'new' && state.stage === 'N1'
+    return true
+  })
+  if (!situationAllowed) reasons.push('Выберите соответствующую ситуацию, чтобы использовать это фактическое сообщение.')
+  return { allowed: reasons.length === 0 && situationAllowed && audienceAllowed && contextAllowed, reasons, audienceAllowed, situationAllowed, contextAllowed }
 }
 
 export function audienceForPath(path: FlowPath, audience: Audience): boolean {

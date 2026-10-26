@@ -61,7 +61,7 @@ export default function CopyComposer({
     : template
   const rendered = renderTemplate(renderedTemplate, state.fields)
   const guardResult = canUseTemplate(template, state)
-  const needsNeutral = !rendered.copyable || (needsContactPermission && !contactIncluded && !template.withoutContactBody)
+  const needsNeutral = !rendered.copyable || !guardResult.situationAllowed || (needsContactPermission && !contactIncluded && !template.withoutContactBody)
   const neutral = template.neutralAlternative ?? neutralAlternatives[template.category](template.audience)
   const sourceText = needsNeutral ? neutral : rendered.text
   const editedText = draft?.templateId === template.id && draft.source === sourceText ? draft.text : sourceText
@@ -71,7 +71,7 @@ export default function CopyComposer({
     const value = state.fields[field]?.trim()
     return value && value.length > 2 && editedText.includes(value)
   })
-  const isCopyable = guardResult.allowed && editedText.trim().length > 0 && !containsPlaceholder && !insertedContactWithoutPermission
+  const isCopyable = guardResult.audienceAllowed && guardResult.contextAllowed && editedText.trim().length > 0 && !containsPlaceholder && !insertedContactWithoutPermission
   const hasDetails = (showRequiredFields && template.requiredFields.length > 0) || needsContactPermission
   const needsHandoverContext = template.audience === 'handover'
 
@@ -148,7 +148,7 @@ export default function CopyComposer({
         onChange={(event) => { setDraft({ templateId: template.id, source: sourceText, text: event.target.value }); setCopyStatus(null) }}
         rows={Math.max(3, Math.min(6, Math.ceil(editedText.length / 58)))}
       /> : <p className="message-preview" aria-label="Текст сообщения">{editedText}</p>}
-      {needsNeutral && <p className="neutral-notice" role="status">{rendered.missing.length ? missingMessage(rendered.missing) : 'Контакт не добавлен. Для него нужны разрешение и отдельный выбор.'} Показан безопасный нейтральный вариант.</p>}
+      {needsNeutral && <p className="neutral-notice" role="status">{!guardResult.situationAllowed ? 'Фактический вариант доступен после выбора соответствующей ситуации.' : rendered.missing.length ? missingMessage(rendered.missing) : 'Контакт не добавлен. Для него нужны разрешение и отдельный выбор.'} Показан безопасный нейтральный вариант.</p>}
       {!guardResult.allowed && <p className="guard-message">{guardResult.reasons.join(' ')}</p>}
       {needsHandoverContext && <p className="privacy-inline">Контакт и адрес вводятся вручную и остаются в этом браузере.</p>}
 

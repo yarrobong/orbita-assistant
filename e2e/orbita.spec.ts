@@ -58,9 +58,17 @@ test('pickup agreement and address messages use neutral text until exact details
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
   await expect(page.getByLabel('Текст сообщения')).not.toContainText(/\{\{|Адрес:/u)
 
-  await stages.getByRole('button', { name: 'Передать адрес и инструкции' }).click()
-  await expect(page.getByLabel('Текст сообщения')).toContainText(/уточню адрес и инструкции/u)
   await page.locator('.composer-details summary').click()
+  await page.getByLabel('Дата', { exact: true }).fill('30 октября')
+  await page.getByLabel('Время', { exact: true }).fill('17:00')
+  await page.getByLabel('Адрес', { exact: true }).fill('Адрес, введённый пользователем')
+  await expect(page.getByLabel('Текст сообщения')).toContainText('30 октября в 17:00. Адрес: Адрес, введённый пользователем.')
+  await expect(page.getByLabel('Подтверждаю разрешение передать контакт')).toHaveCount(0)
+
+  await stages.getByRole('button', { name: 'Передать адрес и инструкции' }).click()
+  await page.locator('.composer-details summary').click()
+  await page.getByLabel('Адрес', { exact: true }).clear()
+  await expect(page.getByLabel('Текст сообщения')).toContainText(/уточню адрес и инструкции/u)
   await page.getByLabel('Адрес', { exact: true }).fill('Тестовый адрес, введённый пользователем')
   await expect(page.getByLabel('Текст сообщения')).toContainText('Тестовый адрес, введённый пользователем')
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
@@ -90,11 +98,27 @@ test('review is open from After purchase and the issue-first option stays availa
   await page.goto('./#/flow/after-purchase')
   await expect(page.getByText(/Просить отзыв следует после получения товара/u)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Уже попросил отзыв' }).click()
+  await expect(page.getByRole('button', { name: 'Отметка об отзыве поставлена' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
   await page.getByRole('group', { name: 'Вариант после покупки' }).getByRole('button', { name: 'Есть проблема — сначала помочь' }).click()
   await expect(page.getByRole('heading', { name: 'Проблема с товаром' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
   await page.getByRole('group', { name: 'Вариант после покупки' }).getByRole('button', { name: 'Попросить отзыв' }).click()
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+})
+
+test('delivery and pickup review situations offer a non-blocking optional request marker', async ({ page }) => {
+  for (const [route, group, label] of [
+    ['delivery', 'Ситуации доставки', 'Попросить отзыв'],
+    ['pickup', 'Ситуации самовывоза', 'Попросить отзыв'],
+  ]) {
+    await page.goto(`./#/flow/${route}`)
+    await page.getByRole('group', { name: group }).getByRole('button', { name: label }).click()
+    await page.getByRole('button', { name: 'Уже попросил отзыв' }).click()
+    await expect(page.getByRole('button', { name: 'Отметка об отзыве поставлена' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+  }
 })
 
 test('scenario copy stays reachable on a short mobile screen while editing', async ({ page }) => {

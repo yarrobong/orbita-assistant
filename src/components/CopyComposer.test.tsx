@@ -33,6 +33,18 @@ describe('CopyComposer', () => {
     expect(screen.getByText(/Добавьте дату и время/)).toBeInTheDocument()
   })
 
+  it('copies a neutral alternative when a factual template is opened without selecting its situation', () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    const factual = { ...basicTemplate, body: 'Заказ передали в доставку.', guardFlags: ['shippedVerified'] as Template['guardFlags'] }
+    render(<CopyComposer template={factual} state={initialFlowState('delivery')} onFieldChange={() => {}} />)
+
+    expect(screen.getByLabelText('Текст сообщения')).toHaveValue('Уточню детали и вернусь к вам с ответом.')
+    expect(screen.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Копировать' }))
+    expect(writeText).toHaveBeenCalledWith('Уточню детали и вернусь к вам с ответом.')
+  })
+
   it('offers and copies a neutral alternative when required fields are missing', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal('navigator', { clipboard: { writeText } })

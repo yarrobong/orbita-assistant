@@ -23,7 +23,7 @@
 ## Review Focus
 
 - Opening a late delivery or pickup stage from a fresh install must work without state from earlier stages.
-- Clicking a factual template must not be blocked by informational guard flags, but internal-only content must stay labeled and audience-aware.
+- Clicking a factual template inside its explicitly selected situation must not require a second confirmation; outside that situation it must fall back to neutral copy. Internal-only content must stay labeled and audience-aware.
 - Missing fields must show a relevant neutral message without technical placeholders; a user cannot force-copy stale rendered text after editing.
 - A phone/name must stay absent from the buyer message unless permission is confirmed and a second explicit include action is selected.
 - After-purchase review access must be independent of a deal's prior state, while the issue-first route remains obvious.
@@ -65,7 +65,8 @@
 
 **Files:** `README.md`, `docs/acceptance.md`, `docs/performance.md`, package version, acceptance tests.
 
-- [ ] Run lint, TypeScript, all Vitest, Chromium and CI WebKit Playwright, production build, public-data audit, bundle budget, Lighthouse, and screenshot review at mobile/desktop widths.
+- [x] Run lint, TypeScript, all Vitest, Chromium Playwright, production build, public-data audit, bundle budget, Lighthouse, and screenshot review at mobile/desktop widths.
+- [ ] Verify the WebKit desktop and iPhone profiles in GitHub CI; local WebKit startup was blocked by the bundled process exiting with SIGSEGV.
 - [ ] Fix any regression and rerun the affected tests.
-- [ ] Update 1.2 acceptance evidence and commit `docs: record ORBITA Assistant 1.2 acceptance`.
+- [x] Update 1.2 acceptance evidence and commit `docs: record ORBITA Assistant 1.2 acceptance`.
 - [ ] Push the verified branch and publish via the existing `main` GitHub Actions Pages workflow; verify the production route and offline reload.

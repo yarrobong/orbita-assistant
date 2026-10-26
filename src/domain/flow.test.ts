@@ -42,7 +42,10 @@ describe('guarded scenario state', () => {
 
   it('treats a selected factual template as intent without a second confirmation', () => {
     const shipped = templateCatalog.find(({ id }) => id === 'top-05')!
-    expect(canUseTemplate(shipped, initialFlowState('delivery'))).toEqual({ allowed: true, reasons: [] })
+    const fresh = initialFlowState('delivery')
+    expect(canUseTemplate(shipped, fresh).situationAllowed).toBe(false)
+    const selected = transition(fresh, { type: 'set-stage', stage: 'D4' })
+    expect(canUseTemplate(shipped, selected)).toMatchObject({ allowed: true, situationAllowed: true })
   })
 
   it('keeps internal handover messages unavailable until the internal audience is selected', () => {
@@ -55,19 +58,18 @@ describe('guarded scenario state', () => {
 
   it('prepares the internal handover request without a prior stock confirmation', () => {
     const template = templateCatalog.find(({ id }) => id === 'scenario-14')!
-    let state = initialFlowState('pickup')
-    state = transition(state, { type: 'set-audience', audience: 'handover' })
+    let state = transition(initialFlowState('pickup'), { type: 'set-stage', stage: 'P2' })
     state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок Quest' })
     state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
     state = transition(state, { type: 'set-field', field: 'time', value: '17:00' })
 
     expect(state.flags.stockConfirmed).toBe(false)
-    expect(canUseTemplate(template, state)).toEqual({ allowed: true, reasons: [] })
+    expect(canUseTemplate(template, state)).toMatchObject({ allowed: true, situationAllowed: true })
   })
 
   it.each(['scenario-17', 'top-10'])('prepares buyer confirmation before the buyer is notified (%s)', (id) => {
     const template = templateCatalog.find((candidate) => candidate.id === id)!
-    let state = initialFlowState('pickup')
+    let state = transition(initialFlowState('pickup'), { type: 'set-stage', stage: 'P4' })
     for (const [field, value] of Object.entries({ product: 'Ремешок Quest', date: '30 октября', time: '17:00', address: 'Локальный адрес', handoverName: 'Анна', handoverPhone: '+7 900 000-00-00' })) {
       state = transition(state, { type: 'set-field', field, value })
     }
@@ -76,7 +78,7 @@ describe('guarded scenario state', () => {
     }
 
     expect(state.flags).toHaveProperty('buyerNotified', false)
-    expect(canUseTemplate(template, state)).toEqual({ allowed: true, reasons: [] })
+    expect(canUseTemplate(template, state)).toMatchObject({ allowed: true, situationAllowed: true })
   })
 
   it('separates preparing a buyer message from marking that buyer as notified', () => {
@@ -122,7 +124,7 @@ describe('guarded scenario state', () => {
   })
 
   it('keeps the selected pickup message available without operational checkboxes', () => {
-    let state = initialFlowState('pickup')
+    let state = transition(initialFlowState('pickup'), { type: 'set-stage', stage: 'P4' })
     state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок Quest' })
     state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
     state = transition(state, { type: 'set-field', field: 'time', value: '17:00' })
@@ -134,7 +136,7 @@ describe('guarded scenario state', () => {
       state = transition(state, { type: 'confirm', flag, value: true })
     }
     state = transition(state, { type: 'confirm', flag: 'buyerMessagePrepared' as FlagName, value: true })
-    expect(canUseTemplate(pickupConfirmation, state)).toEqual({ allowed: true, reasons: [] })
+    expect(canUseTemplate(pickupConfirmation, state)).toMatchObject({ allowed: true, situationAllowed: true })
   })
 
   it('invalidates handover and slot approval when date or time changes', () => {
@@ -159,17 +161,30 @@ describe('guarded scenario state', () => {
   })
 
   it('keeps review messages accessible before receipt and while an issue is open', () => {
-    let state = initialFlowState('delivery')
-    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
-    state = markDeliveryReceived()
+    let state = transition(initialFlowState('delivery'), { type: 'set-stage', stage: 'D8' })
     expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
     state = transition(state, { type: 'confirm', flag: 'issueOpen', value: true })
-    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
+    state = transition(state, { type: 'set-stage', stage: 'D8' })
+    expect(canUseTemplate(reviewTemplate, state).situationAllowed).toBe(false)
+  })
+
+  it('keeps compatibility, price, and terms assertions neutral outside their explicit inquiry situation', () => {
+    const factual: Template = {
+      ...pickupConfirmation,
+      id: 'buyer.facts',
+      category: 'general',
+      requiredFields: [],
+      guardFlags: ['compatibilityChecked', 'priceConfirmed', 'termsConfirmed'],
+    }
+    const fresh = initialFlowState('new')
+    expect(canUseTemplate(factual, fresh).situationAllowed).toBe(false)
+    let selected = transition(fresh, { type: 'set-stage', stage: 'N1' })
+    selected = transition(selected, { type: 'set-field', field: 'price', value: '10 000 ₽' })
+    expect(canUseTemplate(factual, selected).situationAllowed).toBe(true)
   })
 
   it('opens pickup review from a fresh state without completing the handover funnel', () => {
-    let state = initialFlowState('pickup')
-    state = transition(state, { type: 'confirm', flag: 'receivedVerified', value: true })
+    let state = transition(initialFlowState('pickup'), { type: 'set-stage', stage: 'P8' })
     expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
     state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок' })
     state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
@@ -280,14 +295,13 @@ describe('guarded scenario state', () => {
     const unavailable: Template = { ...pickupConfirmation, guardFlags: ['stockConfirmed', 'stockUnavailable'], requiredFields: [] }
     let state = initialFlowState('new')
     state = transition(state, { type: 'set-field', field: 'product', value: 'Геймпад' })
-    expect(canUseTemplate(available, state).allowed).toBe(true)
+    expect(canUseTemplate(available, state).situationAllowed).toBe(false)
     state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'available' })
+    state = transition(state, { type: 'set-stage', stage: 'N1' })
     expect(canUseTemplate(available, state).allowed).toBe(true)
-    state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
-    expect(canUseTemplate(available, state).allowed).toBe(true)
-    expect(canUseTemplate(unavailable, state).allowed).toBe(true)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
     state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'unavailable' })
-    expect(state.flags.stockConfirmed).toBe(false)
+    expect(canUseTemplate(available, state).allowed).toBe(false)
     expect(canUseTemplate(unavailable, state).allowed).toBe(true)
   })
 
@@ -303,17 +317,18 @@ describe('guarded scenario state', () => {
   })
 
   it('records the optional review marker without hiding the review template', () => {
-    let state = markDeliveryReceived()
+    let state = transition(markDeliveryReceived(), { type: 'set-stage', stage: 'D8' })
     state = transition(state, { type: 'mark-review-requested' })
     expect(state.flags.reviewRequested).toBe(true)
     expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
   })
 
-  it('keeps review available when there is a problem so the UI can show issue-first guidance', () => {
-    let state = markDeliveryReceived()
+  it('uses issue-first neutral guidance while a buyer problem remains open', () => {
+    let state = transition(markDeliveryReceived(), { type: 'set-stage', stage: 'D8' })
     state = transition(state, { type: 'confirm', flag: 'issueOpen', value: true })
+    state = transition(state, { type: 'set-stage', stage: 'D8' })
     state = transition(state, { type: 'mark-review-requested' })
     expect(state.flags.reviewRequested).toBe(true)
-    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
+    expect(canUseTemplate(reviewTemplate, state).situationAllowed).toBe(false)
   })
 })

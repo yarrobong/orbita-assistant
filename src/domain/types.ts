@@ -48,6 +48,6 @@ export type FlowEvent =
   | { type: 'set-stage'; stage: string }
   | { type: 'mark-review-requested' }
 
-export type GuardResult = { allowed: boolean; reasons: string[] }
+export type GuardResult = { allowed: boolean; reasons: string[]; audienceAllowed: boolean; situationAllowed: boolean; contextAllowed: boolean }
 
 export type ImportableTemplate = Omit<Template, 'source' | 'usage'> & { source?: SourceCollection; usage?: string }
