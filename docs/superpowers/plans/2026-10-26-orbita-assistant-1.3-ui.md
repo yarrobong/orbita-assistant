@@ -90,8 +90,7 @@
 - Modify: `src/features/QuickAnswers.tsx`
 - Modify: `src/features/TemplateLibrary.tsx`
 - Modify: `src/styles/app.css`
-- Test: `src/app/routes.test.ts`
-- Test: `src/features/QuickAnswers.test.tsx` (create if absent)
+- Test: `src/app/App.test.tsx` (route and application-shell contracts are colocated here)
 - Test: `src/features/TemplateLibrary.test.tsx`
 - Test: `e2e/orbita.spec.ts`
 
@@ -99,12 +98,12 @@
 - Consumes: current `AppRoute`, stable template IDs, `searchTemplates`, favorite/recent handlers and `CopyComposer` props.
 - Produces: selected item state synchronized with `#/quick`, `#/answers`, and `#/template/<id>`; desktop list-detail selection without full-page navigation; sequential mobile detail with return-to-list behavior.
 
-- [ ] **Step 1: Write failing tests** for selecting quick answer updates detail, selecting a library row reveals preview beside list at desktop widths, mobile detail provides a back action, all 118 templates remain present, and direct template hashes survive reload/Back.
-- [ ] **Step 2: Run `npm test -- src/app/routes.test.ts src/features/QuickAnswers.test.tsx src/features/TemplateLibrary.test.tsx`**; expected: new desktop-selection/mobile-return assertions fail because each current selection is a full route change.
-- [ ] **Step 3: Implement route-synchronized selection** while retaining canonical template routes and browser history; keep filters and query state when returning to the list.
-- [ ] **Step 4: Run focused unit tests**; expected: selection, filter, favorites, recent, direct-link and browser-history contracts pass.
-- [ ] **Step 5: Run focused Playwright tests at 390 and 1280 px**; expected: desktop shows list/detail together; mobile shows a sequential flow and no horizontal overflow.
-- [ ] **Step 6: Commit** as `feat: add answer master detail views`.
+- [x] **Step 1: Write failing tests** for selecting quick answer updates detail, selecting a library row reveals preview beside list at desktop widths, mobile detail provides a back action, all 118 templates remain present, and direct template hashes survive reload/Back.
+- [x] **Step 2: Run focused Playwright tests**; expected: new master/detail assertions fail because selection previously replaced the list with a full-page route.
+- [x] **Step 3: Implement route-synchronized selection** while retaining canonical template routes and browser history; keep filters and query state when returning to the list.
+- [x] **Step 4: Run focused unit tests**; expected: selection, filter, favorites, recent, direct-link and browser-history contracts pass.
+- [x] **Step 5: Run focused Playwright tests at 390 and 1280 px**; expected: desktop shows list/detail together; mobile shows a sequential flow and no horizontal overflow.
+- [x] **Step 6: Commit** as `feat: add answer master detail views`.
 
 ## Task 4: Simplify composer and scenario navigation without changing domain safety
 

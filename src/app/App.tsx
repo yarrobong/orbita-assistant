@@ -51,16 +51,17 @@ const safeReadRecentIds = (): string[] => {
   try { return normalizeRecentIds(JSON.parse(localStorage.getItem('orbita:recent-templates') ?? '[]')) } catch { return [] }
 }
 
-function TemplateUse({ template, onBack, onCopied }: { template: Template; onBack: () => void; onCopied: () => void }) {
+function TemplateUse({ template, onBack, onCopied, embedded = false, backLabel = 'Все ответы' }: { template: Template; onBack: () => void; onCopied: () => void; embedded?: boolean; backLabel?: string }) {
   const path = template.category === 'pickup' ? 'pickup' : template.category === 'delivery' ? 'delivery' : 'new'
   const canSwitchAudience = template.audience === 'handover' || template.guardFlags.includes('handoverContext')
   const [state, setState] = useState(() => initialFlowState(path))
   const update = (event: Parameters<typeof transition>[1]) => setState((current) => transition(current, event))
-  return <section><button className="back-link" type="button" onClick={onBack}>← Все ответы</button><header className="page-heading"><p className="eyebrow">ШАБЛОН ИЗ БАЗЫ</p><h1>{template.title}</h1></header><CopyComposer template={template} state={state} onFieldChange={(field, value) => update({ type: 'set-field', field, value })} onConfirm={(flag, value) => update({ type: 'confirm', flag, value })} onAudienceChange={canSwitchAudience ? (audience) => update({ type: 'set-audience', audience }) : undefined} onCopied={onCopied} /></section>
+  return <section className={`template-use${embedded ? ' is-embedded' : ''}`}><button className="back-link" type="button" onClick={onBack}>← {backLabel}</button><header className="page-heading"><h1>{template.title}</h1></header><CopyComposer template={template} state={state} onFieldChange={(field, value) => update({ type: 'set-field', field, value })} onConfirm={(flag, value) => update({ type: 'confirm', flag, value })} onAudienceChange={canSwitchAudience ? (audience) => update({ type: 'set-audience', audience }) : undefined} onCopied={onCopied} /></section>
 }
 
 function AppShell() {
   const [route, setRoute] = useState<AppRoute>(() => currentRoute().route)
+  const [selectionOrigin, setSelectionOrigin] = useState<'quick' | 'library'>(() => currentRoute().route.kind === 'quick' ? 'quick' : 'library')
   const [query, setQuery] = useState('')
   const [favorites, setFavorites] = useState(safeReadFavorites)
   const [recentIds, setRecentIds] = useState(safeReadRecentIds)
@@ -90,6 +91,8 @@ function AppShell() {
       const resolved = currentRoute()
       if (window.location.hash !== resolved.canonicalHash) replaceHash(resolved.canonicalHash)
       setRoute(resolved.route)
+      if (resolved.route.kind === 'quick') setSelectionOrigin('quick')
+      else if (resolved.route.kind === 'answers') setSelectionOrigin('library')
       if (resolved.route.kind === 'flow') {
         const flowRoute = resolved.route
         setLiveFlow((current) => current?.path === flowRoute.path ? current : initialFlowState(flowRoute.path))
@@ -149,9 +152,12 @@ function AppShell() {
 
   const navigate = (next: AppRoute) => {
     const hash = routeHash(next)
+    if (next.kind === 'answers') setSelectionOrigin('library')
+    else if (next.kind === 'quick') setSelectionOrigin('quick')
     window.location.hash = hash
     setRoute(next)
   }
+  const openTemplate = (id: string, origin: 'quick' | 'library') => { setSelectionOrigin(origin); navigate({ kind: 'template', id }) }
   const open = (id: string) => {
     if (id === 'templates' || id === 'answers') { navigate({ kind: 'answers' }); return }
     if (id === 'quick') { navigate({ kind: 'quick' }); return }
@@ -168,8 +174,13 @@ function AppShell() {
   const selected = route.kind === 'template' ? templateCatalog.find((template) => template.id === route.id) : undefined
   const navRoute = primarySectionFor(route)
   const searchResults = query.trim() ? searchTemplates(templateCatalog, query).slice(0, 6) : []
-  const selectSearchResult = (id: string) => { setMobileSearchOpen(false); navigate({ kind: 'template', id }) }
+  const selectSearchResult = (id: string) => { setMobileSearchOpen(false); openTemplate(id, 'library') }
   const handleGlobalSearch = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); if (searchResults[0]) selectSearchResult(searchResults[0].id); else navigate({ kind: 'answers' }) }
+  const isTemplateSelection = route.kind === 'template'
+  const selectedQuickId = isTemplateSelection && selectionOrigin === 'quick' ? route.id : undefined
+  const selectedLibraryId = isTemplateSelection && selectionOrigin === 'library' ? route.id : undefined
+  const showQuickAnswers = route.kind === 'quick' || selectedQuickId !== undefined
+  const showTemplateLibrary = route.kind === 'answers' || selectedLibraryId !== undefined
 
   return <div className="app-frame" data-app-base={APP_BASE}>
     <aside className="sidebar" inert={mobileSearchOpen}><a className="brand" href="#/home" onClick={(event) => { event.preventDefault(); navigate({ kind: 'home' }) }}><span className="brand-mark" aria-hidden="true">O</span><span><strong>ORBITA</strong><small>Assistant</small></span></a>
@@ -183,10 +194,9 @@ function AppShell() {
       {updateWorker && <aside className="update-notice" role="status"><p>Доступно обновление. Скопируйте введённый текст перед перезапуском.</p><button className="button button-primary" type="button" onClick={() => updateWorker.postMessage({ type: 'ACTIVATE_UPDATE' })}>Обновить приложение</button><button className="update-dismiss" type="button" onClick={() => setUpdateWorker(null)}>Позже</button></aside>}
       <main className="main-content" inert={mobileSearchOpen}>
         {route.kind === 'home' && <HomeScreen onOpen={open} onUseTemplate={(id) => navigate({ kind: 'template', id })} favorites={favorites} recentIds={recentIds} lastScenario={lastScenario} onContinue={() => { if (lastScenario) navigate({ kind: 'flow', path: lastScenario.path as FlowPath }) }} />}
-        {route.kind === 'quick' && <section><header className="page-heading"><p className="eyebrow">БЫСТРЫЙ ОТВЕТ</p><h1>Что спросил покупатель?</h1></header><QuickAnswers onChoose={(id) => navigate({ kind: 'template', id })} /></section>}
+        {showQuickAnswers && <div className={`master-detail answer-workspace${selectedQuickId ? ' has-selection' : ''}`}><div className="master-pane"><QuickAnswers selectedTemplateId={selectedQuickId} onChoose={(id) => openTemplate(id, 'quick')} /></div>{selectedQuickId && selected && <div className="detail-pane"><TemplateUse embedded backLabel="Быстрые ответы" template={selected} onBack={() => navigate({ kind: 'quick' })} onCopied={() => markTemplateUsed(selected.id)} /></div>}{route.kind === 'quick' && <div className="detail-empty">Выберите ситуацию, чтобы открыть сообщение.</div>}</div>}
         {route.kind === 'flow' && <FlowScreen kind={route.path} flowState={liveFlow?.path === route.path ? liveFlow : initialFlowState(route.path)} onFlowStateChange={setLiveFlow} initialStage={lastScenario?.path === route.path ? lastScenario.stage : undefined} initialReviewRequested={lastScenario?.path === route.path && lastScenario.reviewRequested} initialIssueOpen={lastScenario?.path === route.path && lastScenario.issueOpen} onBack={() => navigate({ kind: 'home' })} onStageChange={(path, stage) => setLastScenario((current) => ({ path, stage, reviewRequested: current?.path === path && current.reviewRequested, issueOpen: current?.path === path && current.issueOpen }))} onStatusChange={(state) => setLastScenario({ path: state.path, stage: state.stage, reviewRequested: state.flags.reviewRequested, issueOpen: state.flags.issueOpen })} />}
-        {route.kind === 'answers' && <TemplateLibrary favorites={favorites} recentIds={recentIds} query={query} onQueryChange={setQuery} onFavorite={favorite} onUse={(id) => navigate({ kind: 'template', id })} onCopy={(_id, text) => copyText(text)} onCopied={markTemplateUsed} />}
-        {route.kind === 'template' && selected && <TemplateUse template={selected} onBack={() => navigate({ kind: 'answers' })} onCopied={() => markTemplateUsed(selected.id)} />}
+        {showTemplateLibrary && <div className={`master-detail answer-workspace${selectedLibraryId ? ' has-selection' : ''}`}><div className="master-pane"><TemplateLibrary embedded selectedId={selectedLibraryId} favorites={favorites} recentIds={recentIds} query={query} onQueryChange={setQuery} onFavorite={favorite} onUse={(id) => openTemplate(id, 'library')} onCopy={(_id, text) => copyText(text)} onCopied={markTemplateUsed} /></div>{selectedLibraryId && selected && <div className="detail-pane"><TemplateUse embedded template={selected} onBack={() => navigate({ kind: 'answers' })} onCopied={() => markTemplateUsed(selected.id)} /></div>}{route.kind === 'answers' && <div className="detail-empty">Выберите ответ, чтобы прочитать и подготовить сообщение.</div>}</div>}
         {route.kind === 'settings' && <SettingsScreen onClear={() => { setFavorites([]); setRecentIds([]); setLastScenario(null); setLiveFlow(null); localStorage.removeItem('orbita:last-scenario'); localStorage.removeItem('orbita:recent-templates'); navigate({ kind: 'home' }) }} />}
       </main>
     </div>
