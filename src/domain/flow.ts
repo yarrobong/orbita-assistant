@@ -23,7 +23,7 @@ export const emptyFlags = (): FlowFlags => ({
 
 export function initialFlowState(path: FlowPath): FlowState {
   const stageByPath: Record<FlowPath, string> = {
-    new: 'N0', delivery: 'D0', pickup: 'P0', 'after-purchase': 'AFTER',
+    new: 'N0', delivery: 'D0', pickup: 'P0', 'after-purchase': 'AFTER_REVIEW',
   }
   return { path, stage: stageByPath[path], audience: 'buyer', fields: {}, flags: emptyFlags() }
 }
@@ -68,7 +68,7 @@ export function transition(state: FlowState, event: FlowEvent): FlowState {
 
   if (event.type === 'set-audience') return { ...state, audience: event.audience }
   if (event.type === 'set-stage') return canEnterStage(state, event.stage)
-    ? { ...state, stage: event.stage, ...(state.path === 'pickup' && event.stage === 'P4' ? { audience: 'buyer' as const } : {}) }
+    ? { ...state, stage: event.stage, audience: state.path === 'pickup' && event.stage === 'P2' ? 'handover' : 'buyer' }
     : state
 
   if (event.type === 'mark-review-requested') {
@@ -80,27 +80,14 @@ export function transition(state: FlowState, event: FlowEvent): FlowState {
 }
 
 export function canEnterStage(state: FlowState, target: string): boolean {
-  if (target === 'DX') return true
-  const prefix = state.path === 'delivery' ? 'D' : state.path === 'pickup' ? 'P' : state.path === 'new' ? 'N' : 'AFTER'
-  if (!target.startsWith(prefix)) return false
-  const currentRank = Number(state.stage.slice(prefix.length))
-  const targetRank = Number(target.slice(prefix.length))
-  if (Number.isInteger(currentRank) && Number.isInteger(targetRank) && targetRank <= currentRank) return true
-  if (state.path === 'delivery') {
-    return /^D[0-7]$/u.test(target)
-  }
-  if (state.path === 'pickup') {
-    switch (target) {
-      case 'P1': return true
-      case 'P2':
-      case 'P3': return pickupSlotReady(state)
-      case 'P4': return pickupHandoverReady(state)
-      case 'P5': return state.flags.buyerNotified
-      case 'P6': return state.flags.buyerNotified
-      case 'P7': return canRecommendReview(state)
-    }
-  }
-  return state.path === 'new' ? target === 'N1' : target === 'AFTER'
+  const allowed = state.path === 'delivery'
+    ? Array.from({ length: 10 }, (_, index) => `D${index}`)
+    : state.path === 'pickup'
+      ? Array.from({ length: 9 }, (_, index) => `P${index}`)
+      : state.path === 'new'
+        ? ['N0', 'N1']
+        : ['AFTER', 'AFTER_REVIEW', 'AFTER_ISSUE']
+  return allowed.includes(target) || target === 'DX'
 }
 
 export function pickupSlotReady(state: FlowState): boolean {
@@ -118,10 +105,7 @@ export function pickupConfirmationReady(state: FlowState): boolean {
 }
 
 export function canRecommendReview(state: FlowState): boolean {
-  const postPurchaseVerified = state.path === 'pickup'
-    ? state.flags.handoverCompleted
-    : state.flags.receivedVerified
-  return postPurchaseVerified && !state.flags.issueOpen && !state.flags.reviewRequested
+  return !state.flags.reviewRequested
 }
 
 function canSetFlag(state: FlowState, flag: keyof FlowFlags): boolean {
@@ -149,63 +133,11 @@ export function canUseTemplate(template: Template, state: FlowState): GuardResul
   if (template.audience !== state.audience) {
     reasons.push(template.audience === 'handover' ? 'Переключите аудиторию на «Человеку на точке».' : 'Этот текст предназначен покупателю.')
   }
-
-  for (const guard of template.guardFlags) {
-    let passed: boolean
-    switch (guard) {
-      case 'noIssueOpen': passed = !state.flags.issueOpen; break
-      case 'reviewNotRequested': passed = !state.flags.reviewRequested; break
-      case 'handoverContext': passed = state.path === 'pickup' && state.audience === 'handover'; break
-      case 'stockAvailable': passed = state.flags.stockConfirmed && ['available', 'mixed'].includes(state.fields.stockStatus ?? ''); break
-      case 'stockUnavailable': passed = state.flags.stockConfirmed && ['unavailable', 'mixed'].includes(state.fields.stockStatus ?? ''); break
-      case 'variantChecked': passed = state.flags.variantChecked; break
-      case 'receivedVerified': passed = state.path === 'pickup' ? state.flags.handoverCompleted : state.flags.receivedVerified; break
-      default: passed = state.flags[guard]
-    }
-    if (!passed) reasons.push(reasonForGuard(guard))
-  }
-
-  for (const field of template.requiredFields) {
-    if (!state.fields[field]?.trim()) reasons.push(`Заполните поле «${fieldLabel(field)}».`)
+  if (template.guardFlags.includes('handoverContext') && state.path !== 'pickup') {
+    reasons.push('Это внутреннее сообщение доступно только в сценарии самовывоза.')
   }
 
   return { allowed: reasons.length === 0, reasons }
-}
-
-function reasonForGuard(flag: string): string {
-  const reasons: Record<string, string> = {
-    stockConfirmed: 'Сначала подтвердите наличие именно этого товара.',
-    deliveryAvailable: 'Проверьте, доступна ли Авито Доставка в объявлении.',
-    orderVerified: 'Сначала проверьте заказ в Авито.',
-    shippedVerified: 'Сначала проверьте, что заказ передан в доставку.',
-    receivedVerified: 'Сначала проверьте, что покупатель получил заказ.',
-    handoverConfirmed: 'Укажите человека на точке и получите подтверждение товара и времени.',
-    buyerMessagePrepared: 'Сначала подготовьте сообщение покупателю после всех проверок.',
-    buyerNotified: 'Отметьте сообщение как отправленное покупателю после фактической отправки.',
-    addressConfirmed: 'Уточните адрес и отметьте его как проверенный.',
-    contactPermission: 'Убедитесь, что человек разрешил передать контакт.',
-    handoverCompleted: 'Отметьте фактическую передачу товара.',
-    reviewRequested: 'Просьба об отзыве для этого сценария уже отмечена.',
-    issueOpen: 'Сначала разберитесь с проблемой покупателя.',
-    stockAvailable: 'Отметьте, что нужный вариант точно есть в наличии.',
-    stockUnavailable: 'Отметьте, что нужного варианта действительно нет.',
-    variantChecked: 'Проверьте остаток именно нужного цвета или варианта.',
-    compatibilityChecked: 'Проверьте совместимость конкретной модели.',
-    priceConfirmed: 'Сверьте цену или скидку перед отправкой.',
-    termsConfirmed: 'Сверьте условия гарантии или возврата.',
-    noIssueOpen: 'Сначала разберитесь с проблемой покупателя.',
-    reviewNotRequested: 'Просьба об отзыве для этого сценария уже отмечена.',
-    handoverContext: 'Переключитесь на внутреннее сообщение человеку на точке.',
-  }
-  return reasons[flag] ?? 'Проверьте условия этого ответа.'
-}
-
-function fieldLabel(field: string): string {
-  const labels: Record<string, string> = {
-    product: 'товар', variant: 'вариант', date: 'дату', time: 'время', address: 'адрес',
-    handoverName: 'имя выдающего', handoverPhone: 'телефон выдающего', price: 'цену',
-  }
-  return labels[field] ?? field
 }
 
 export function audienceForPath(path: FlowPath, audience: Audience): boolean {

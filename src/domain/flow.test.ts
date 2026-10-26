@@ -30,6 +30,29 @@ function markDeliveryReceived() {
 }
 
 describe('guarded scenario state', () => {
+  it.each(Array.from({ length: 10 }, (_, index) => `D${index}`))('opens delivery situation %s from a fresh state', (stage) => {
+    const state = transition(initialFlowState('delivery'), { type: 'set-stage', stage })
+    expect(state.stage).toBe(stage)
+  })
+
+  it.each(Array.from({ length: 9 }, (_, index) => `P${index}`))('opens pickup situation %s from a fresh state', (stage) => {
+    const state = transition(initialFlowState('pickup'), { type: 'set-stage', stage })
+    expect(state.stage).toBe(stage)
+  })
+
+  it('treats a selected factual template as intent without a second confirmation', () => {
+    const shipped = templateCatalog.find(({ id }) => id === 'top-05')!
+    expect(canUseTemplate(shipped, initialFlowState('delivery'))).toEqual({ allowed: true, reasons: [] })
+  })
+
+  it('keeps internal handover messages unavailable until the internal audience is selected', () => {
+    const internal = templateCatalog.find(({ id }) => id === 'scenario-14')!
+    expect(canUseTemplate(internal, initialFlowState('pickup')).allowed).toBe(false)
+    const selected = transition(initialFlowState('pickup'), { type: 'set-stage', stage: 'P2' })
+    expect(selected.audience).toBe('handover')
+    expect(canUseTemplate(internal, selected).allowed).toBe(true)
+  })
+
   it('prepares the internal handover request without a prior stock confirmation', () => {
     const template = templateCatalog.find(({ id }) => id === 'scenario-14')!
     let state = initialFlowState('pickup')
@@ -98,7 +121,7 @@ describe('guarded scenario state', () => {
     expect(nextDeal.flags).toHaveProperty('buyerNotified', false)
   })
 
-  it('keeps pickup confirmation unavailable until every handover check is set', () => {
+  it('keeps the selected pickup message available without operational checkboxes', () => {
     let state = initialFlowState('pickup')
     state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок Quest' })
     state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
@@ -107,7 +130,7 @@ describe('guarded scenario state', () => {
     state = transition(state, { type: 'set-field', field: 'handoverName', value: 'Анна' })
     state = transition(state, { type: 'set-field', field: 'handoverPhone', value: '+7 900 000-00-00' })
     for (const flag of ['stockConfirmed', 'handoverConfirmed', 'addressConfirmed', 'contactPermission'] as const) {
-      expect(canUseTemplate(pickupConfirmation, state).allowed).toBe(false)
+      expect(canUseTemplate(pickupConfirmation, state).allowed).toBe(true)
       state = transition(state, { type: 'confirm', flag, value: true })
     }
     state = transition(state, { type: 'confirm', flag: 'buyerMessagePrepared' as FlagName, value: true })
@@ -135,19 +158,19 @@ describe('guarded scenario state', () => {
     expect(state.flags.stockConfirmed).toBe(true)
   })
 
-  it('allows a review only after verified receipt and with no open issue', () => {
+  it('keeps review messages accessible before receipt and while an issue is open', () => {
     let state = initialFlowState('delivery')
-    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(false)
+    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
     state = markDeliveryReceived()
     expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
     state = transition(state, { type: 'confirm', flag: 'issueOpen', value: true })
-    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(false)
+    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
   })
 
-  it('requires completed handover, not a delivery receipt flag, for pickup review', () => {
+  it('opens pickup review from a fresh state without completing the handover funnel', () => {
     let state = initialFlowState('pickup')
     state = transition(state, { type: 'confirm', flag: 'receivedVerified', value: true })
-    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(false)
+    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
     state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок' })
     state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
     state = transition(state, { type: 'set-field', field: 'time', value: '17:00' })
@@ -213,10 +236,10 @@ describe('guarded scenario state', () => {
     expect(state.flags.contactPermission).toBe(true)
   })
 
-  it('keeps stage P4 locked until product, time, handover, address and contact checks all match', () => {
+  it('opens pickup confirmation stage directly from a fresh state', () => {
     let state = initialFlowState('pickup')
     state = transition(state, { type: 'set-stage', stage: 'P4' })
-    expect(state.stage).toBe('P0')
+    expect(state.stage).toBe('P4')
     state = transition(state, { type: 'set-field', field: 'product', value: 'Ремешок' })
     state = transition(state, { type: 'set-field', field: 'date', value: '30 октября' })
     state = transition(state, { type: 'set-field', field: 'time', value: '17:00' })
@@ -252,20 +275,20 @@ describe('guarded scenario state', () => {
     expect(state.fields.product).toBe('Другой товар')
   })
 
-  it('distinguishes a checked in-stock item from an unchecked or unavailable item', () => {
+  it('does not gate a selected stock response on informational stock flags', () => {
     const available: Template = { ...pickupConfirmation, guardFlags: ['stockConfirmed', 'stockAvailable'], requiredFields: [] }
     const unavailable: Template = { ...pickupConfirmation, guardFlags: ['stockConfirmed', 'stockUnavailable'], requiredFields: [] }
     let state = initialFlowState('new')
     state = transition(state, { type: 'set-field', field: 'product', value: 'Геймпад' })
-    expect(canUseTemplate(available, state).allowed).toBe(false)
+    expect(canUseTemplate(available, state).allowed).toBe(true)
     state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'available' })
-    expect(canUseTemplate(available, state).allowed).toBe(false)
+    expect(canUseTemplate(available, state).allowed).toBe(true)
     state = transition(state, { type: 'confirm', flag: 'stockConfirmed', value: true })
     expect(canUseTemplate(available, state).allowed).toBe(true)
-    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(true)
     state = transition(state, { type: 'set-field', field: 'stockStatus', value: 'unavailable' })
     expect(state.flags.stockConfirmed).toBe(false)
-    expect(canUseTemplate(unavailable, state).allowed).toBe(false)
+    expect(canUseTemplate(unavailable, state).allowed).toBe(true)
   })
 
   it('keeps internal handover copy unavailable in the buyer audience', () => {
@@ -279,17 +302,18 @@ describe('guarded scenario state', () => {
     expect(canUseTemplate(internal, state).allowed).toBe(true)
   })
 
-  it('marks a review as requested at most once and prevents a second copy', () => {
+  it('records the optional review marker without hiding the review template', () => {
     let state = markDeliveryReceived()
     state = transition(state, { type: 'mark-review-requested' })
     expect(state.flags.reviewRequested).toBe(true)
-    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(false)
+    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
   })
 
-  it('does not mark a review request sent while a problem is open', () => {
+  it('keeps review available when there is a problem so the UI can show issue-first guidance', () => {
     let state = markDeliveryReceived()
     state = transition(state, { type: 'confirm', flag: 'issueOpen', value: true })
     state = transition(state, { type: 'mark-review-requested' })
-    expect(state.flags.reviewRequested).toBe(false)
+    expect(state.flags.reviewRequested).toBe(true)
+    expect(canUseTemplate(reviewTemplate, state).allowed).toBe(true)
   })
 })
