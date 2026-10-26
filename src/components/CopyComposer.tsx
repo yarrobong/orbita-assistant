@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { canUseTemplate } from '../domain/flow'
 import { renderTemplate } from '../domain/render-template'
 import type { Audience, FlagName, FlowState, Template, TemplateCategory } from '../domain/types'
@@ -15,6 +15,7 @@ type Props = {
   showRequiredFields?: boolean
   showDetails?: boolean
   showEditToggle?: boolean
+  showTitle?: boolean
 }
 
 const fieldLabels: Record<string, string> = {
@@ -44,13 +45,14 @@ function missingMessage(missing: string[]): string {
 
 export default function CopyComposer({
   template, state, onFieldChange, onConfirm, onAudienceChange, onCopied,
-  showGuardControls = true, showRequiredFields = true, showDetails = false, showEditToggle = false,
+  showGuardControls = true, showRequiredFields = true, showDetails = false, showEditToggle = true, showTitle = true,
 }: Props) {
   const textarea = useRef<HTMLTextAreaElement>(null)
   const [draft, setDraft] = useState<{ templateId: string; source: string; text: string } | null>(null)
   const [copyStatus, setCopyStatus] = useState<{ source: string; message: string } | null>(null)
   const [includeHandoverContact, setIncludeHandoverContact] = useState(false)
   const [editing, setEditing] = useState(!showEditToggle)
+  const [selectManualCopy, setSelectManualCopy] = useState(false)
   const needsContactPermission = template.guardFlags.includes('contactPermission')
     || contactFields.some((field) => template.requiredFields.includes(field) || template.body.includes(`{{${field}}}`))
   const contactReady = state.flags.contactPermission
@@ -72,8 +74,15 @@ export default function CopyComposer({
     return value && value.length > 2 && editedText.includes(value)
   })
   const isCopyable = guardResult.audienceAllowed && guardResult.contextAllowed && editedText.trim().length > 0 && !containsPlaceholder && !insertedContactWithoutPermission
-  const hasDetails = (showRequiredFields && template.requiredFields.length > 0) || needsContactPermission
+  const hasDetails = (showRequiredFields && template.requiredFields.length > 0) || needsContactPermission || Boolean(template.usage)
   const needsHandoverContext = template.audience === 'handover'
+
+  useEffect(() => {
+    if (!selectManualCopy || !editing || !textarea.current) return
+    textarea.current.focus()
+    textarea.current.select()
+    setSelectManualCopy(false)
+  }, [selectManualCopy, editing])
 
   const handleFieldChange = (field: string, value: string) => {
     if (contactFields.includes(field)) setIncludeHandoverContact(false)
@@ -90,9 +99,14 @@ export default function CopyComposer({
       setCopyStatus({ source: sourceText, message: 'Скопировано' })
       onCopied?.()
     } else {
-      textarea.current?.focus()
-      textarea.current?.select()
       setCopyStatus({ source: sourceText, message: 'Буфер недоступен. Текст выделен — скопируйте вручную.' })
+      if (editing) {
+        textarea.current?.focus()
+        textarea.current?.select()
+      } else {
+        setSelectManualCopy(true)
+        setEditing(true)
+      }
     }
   }
   const renderFields = () => template.requiredFields.map((field) => (
@@ -118,16 +132,12 @@ export default function CopyComposer({
   </>
 
   return (
-    <section className="composer" aria-labelledby={`composer-${template.id}`}>
-      <div className="composer-heading">
-        <div>
-          {needsHandoverContext && <span className="audience-badge audience-internal">Внутреннее сообщение</span>}
-          {!needsHandoverContext && <span className="audience-badge">Покупателю</span>}
-          <h3 id={`composer-${template.id}`}>{template.title}</h3>
-        </div>
-        <span className="copy-symbol" aria-hidden="true">↗</span>
-      </div>
-      {template.usage && <p className="composer-usage">{template.usage}</p>}
+    <section className="composer" aria-labelledby={showTitle ? `composer-${template.id}` : undefined} aria-label={showTitle ? undefined : template.title}>
+      {showTitle && <div className="composer-heading">
+        {needsHandoverContext && <span className="audience-badge audience-internal">Внутреннее сообщение</span>}
+        <h3 id={`composer-${template.id}`}>{template.title}</h3>
+      </div>}
+      {!showTitle && needsHandoverContext && <p className="audience-badge audience-internal">Внутреннее сообщение</p>}
 
       {onAudienceChange && <div className="audience-switch" aria-label="Кому предназначено сообщение">
         <button type="button" aria-pressed={state.audience === 'buyer'} onClick={() => onAudienceChange('buyer')}>Покупателю</button>
@@ -136,9 +146,6 @@ export default function CopyComposer({
 
       {showRequiredFields && !showDetails && template.requiredFields.length > 0 && <div className="field-grid">{renderFields()}</div>}
       {showGuardControls && needsContactPermission && !showDetails && <div className="guard-checklist">{renderContactControls()}</div>}
-      {template.guardFlags.includes('handoverContext') && <div className="internal-warning">Внутреннее сообщение человеку на точке — не отправляйте покупателю.</div>}
-
-      <label className="message-label" htmlFor={`message-${template.id}`}>Готовое сообщение</label>
       {editing ? <textarea
         ref={textarea}
         id={`message-${template.id}`}
@@ -149,18 +156,18 @@ export default function CopyComposer({
         rows={Math.max(3, Math.min(6, Math.ceil(editedText.length / 58)))}
       /> : <p className="message-preview" aria-label="Текст сообщения">{editedText}</p>}
       {needsNeutral && <p className="neutral-notice" role="status">{!guardResult.situationAllowed ? 'Фактический вариант доступен после выбора соответствующей ситуации.' : rendered.missing.length ? missingMessage(rendered.missing) : 'Контакт не добавлен. Для него нужны разрешение и отдельный выбор.'} Показан безопасный нейтральный вариант.</p>}
-      {!guardResult.allowed && <p className="guard-message">{guardResult.reasons.join(' ')}</p>}
+      {(!guardResult.audienceAllowed || !guardResult.contextAllowed) && <p className="guard-message">{guardResult.reasons.filter((reason) => !reason.includes('соответствующую ситуацию')).join(' ')}</p>}
       {needsHandoverContext && <p className="privacy-inline">Контакт и адрес вводятся вручную и остаются в этом браузере.</p>}
 
       <div className="composer-actions">
         <button className="button button-primary copy-button" disabled={!isCopyable} onClick={handleCopy} type="button">Копировать</button>
         <span aria-live="polite" className="copy-status">{status}</span>
       </div>
-      <p className="copy-disclaimer">Копирование не отправляет сообщение в Авито.</p>
       <div className="composer-secondary-actions">
         {showEditToggle && <button className="text-button" type="button" aria-expanded={editing} onClick={() => setEditing((open) => !open)}>{editing ? 'Готово' : 'Изменить текст'}</button>}
         {showDetails && hasDetails && <details className="composer-details">
           <summary>Детали и контакт</summary>
+          {template.usage && <p className="template-usage">{template.usage}</p>}
           {showRequiredFields && template.requiredFields.length > 0 && <div className="field-grid">{renderFields()}</div>}
           {renderContactControls()}
         </details>}

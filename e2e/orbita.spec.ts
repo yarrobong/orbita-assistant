@@ -43,7 +43,7 @@ test('all nine pickup situations are independently available and the coordinatio
     await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
   }
   await stages.getByRole('button', { name: 'Уточнить с человеком на точке' }).click()
-  await expect(page.getByText('Внутреннее сообщение человеку на точке')).toBeVisible()
+  await expect(page.getByText('Внутреннее сообщение', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
   await stages.getByRole('button', { name: 'Интересуется самовывозом' }).click()
   await expect(page.getByLabel('Текст сообщения')).toContainText(/уточню, получится ли организовать выдачу/u)
@@ -136,6 +136,19 @@ test('scenario copy stays reachable on a short mobile screen while editing', asy
   await expect(page.getByText('Скопировано')).toBeVisible()
 })
 
+test('mobile delivery opens the selected message without keeping the full stage list above it', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('./#/flow/delivery')
+  const situations = page.getByRole('group', { name: 'Ситуации доставки' })
+  await expect(situations).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Копировать' })).toHaveCount(0)
+  await situations.getByRole('button', { name: 'Заказ отправлен' }).click()
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeVisible()
+  await expect(situations).toBeHidden()
+  await page.getByRole('button', { name: /Выбрать ситуацию/u }).click()
+  await expect(situations).toBeVisible()
+})
+
 test('search, hash route reload, and narrow mobile view work without horizontal scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 })
   await page.goto('./#/home')
@@ -147,7 +160,7 @@ test('search, hash route reload, and narrow mobile view work without horizontal 
   await page.getByRole('searchbox', { name: 'Поиск по ответам' }).fill('quest 3s')
   await page.getByRole('option').first().click()
   await expect(page.getByRole('heading', { name: 'Уточнить модель' }).first()).toBeVisible()
-  await expect(page.getByLabel('Текст сообщения')).toHaveValue(/Quest 3S/)
+  await expect(page.getByLabel('Текст сообщения')).toContainText(/Quest 3S/u)
   await page.goto('./#/flow/delivery')
   await page.reload()
   await expect(page.getByRole('heading', { name: 'Авито Доставка' })).toBeVisible()
@@ -161,21 +174,48 @@ test('template has a stable URL that survives reload and browser back', async ({
   await page.goto('./#/answers')
   const firstCard = page.locator('.template-row').first()
   const title = await firstCard.locator('h2').textContent()
-  await firstCard.getByRole('button', { name: 'Подготовить' }).click()
+  await firstCard.getByRole('button', { name: /Открыть|Подготовить/u }).click()
   await expect(page).toHaveURL(/#\/template\/[\w%-]+$/u)
-  await expect(page.locator('h1')).toHaveText(title!)
+  await expect(page.locator('.detail-pane h1')).toHaveText(title!)
 
   await page.reload()
-  await expect(page.locator('h1')).toHaveText(title!)
+  await expect(page.locator('.detail-pane h1')).toHaveText(title!)
   await page.goBack()
   await expect(page).toHaveURL(/#\/answers$/u)
   await expect(page.getByRole('heading', { name: 'Все ответы' })).toBeVisible()
 })
 
-test('quick answer opens a source template and records only its ID as recent', async ({ page }) => {
+test('desktop answer selection keeps the catalog visible beside the selected template', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('./#/answers')
+  const firstRow = page.locator('.template-row').first()
+  await firstRow.getByRole('button', { name: /Открыть|Подготовить|Копировать/u }).click()
+  await expect(page).toHaveURL(/#\/template\/[\w%-]+$/u)
+  await expect(page.locator('.master-pane')).toBeVisible()
+  await expect(page.locator('.detail-pane')).toBeVisible()
+  await expect(page.locator('.master-pane .template-row')).toHaveCount(118)
+})
+
+test('mobile answer selection opens sequential details and returns to the list', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('./#/answers')
+  const search = page.getByRole('searchbox', { name: 'Поиск ответа' })
+  await search.fill('в наличии')
+  await page.locator('.template-row').first().getByRole('button', { name: /Открыть|Подготовить|Копировать/u }).click()
+  await expect(page.locator('.detail-pane')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Все ответы/u })).toBeVisible()
+  await page.getByRole('button', { name: /Все ответы/u }).click()
+  await expect(page).toHaveURL(/#\/answers$/u)
+  await expect(page.locator('.master-pane')).toBeVisible()
+  await expect(page.getByRole('searchbox', { name: 'Поиск ответа' })).toHaveValue('в наличии')
+})
+
+test('quick answer opens source template beside its list and records only its ID as recent', async ({ page }) => {
   await page.goto('./#/quick')
   await page.getByRole('button', { name: 'Сделаете фотографии?' }).click()
   await expect(page).toHaveURL(/#\/template\/auto-10$/u)
+  await expect(page.locator('.master-pane')).toBeVisible()
+  await expect(page.locator('.detail-pane')).toBeVisible()
   await expect(page.locator('.audience-switch')).toHaveCount(0)
   await page.getByRole('button', { name: 'Копировать' }).click()
   await expect(page.getByText('Скопировано')).toBeVisible()
@@ -210,6 +250,11 @@ test('search opens focused on mobile, filters as you type, and supports the desk
 test('primary navigation is vertical on desktop and spans three destinations on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('./#/home')
+  const sidebar = page.locator('.sidebar')
+  await expect(sidebar).toHaveCSS('width', '216px')
+  const topbar = await page.locator('.topbar').boundingBox()
+  expect(topbar!.height).toBeGreaterThanOrEqual(56)
+  expect(topbar!.height).toBeLessThanOrEqual(64)
   const items = page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('button')
   await expect(items).toHaveCount(3)
   const first = await items.nth(0).boundingBox()
@@ -222,13 +267,59 @@ test('primary navigation is vertical on desktop and spans three destinations on 
   await expect(items).toHaveCount(3)
 })
 
+test('responsive workspace has no horizontal overflow at all target widths', async ({ page }) => {
+  for (const width of [320, 390, 768, 1280, 1728]) {
+    const height = width < 500 ? 740 : 900
+    await page.setViewportSize({ width, height })
+    await page.goto('./#/home')
+    await expect(page.getByRole('heading', { name: 'Подготовить сообщение' })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+    await page.goto('./#/answers')
+    await expect(page.locator('.template-row')).toHaveCount(118)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+    await page.goto('./#/flow/delivery')
+    await page.getByRole('group', { name: 'Ситуации доставки' }).getByRole('button', { name: 'Заказ отправлен' }).click()
+    await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+    await expect(page.getByRole('button', { name: 'Копировать' })).toBeInViewport()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+  }
+})
+
+test('short mobile composer, safe-area spacing, keyboard focus, and empty search stay usable', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 360 })
+  await page.goto('./#/flow/delivery')
+  await page.getByRole('group', { name: 'Ситуации доставки' }).getByRole('button', { name: 'Заказ отправлен' }).click()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+  await page.getByRole('button', { name: 'Копировать' }).scrollIntoViewIfNeeded()
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  const bottomPadding = await page.locator('.main-content').evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingBottom))
+  expect(bottomPadding).toBeGreaterThanOrEqual(108)
+  const nav = await page.getByRole('navigation', { name: 'Основная навигация' }).boundingBox()
+  expect(nav!.y + nav!.height).toBeLessThanOrEqual(844)
+
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('./#/home')
+  await page.keyboard.press('Control+k')
+  const focusedSearch = page.getByRole('searchbox', { name: 'Быстрый поиск' })
+  await expect(focusedSearch).toBeFocused()
+  const focusStyle = await focusedSearch.evaluate((element) => ({ visible: element.matches(':focus-visible'), width: getComputedStyle(element).outlineWidth }))
+  expect(focusStyle.visible).toBe(true)
+  expect(focusStyle.width).toBe('2px')
+
+  await page.goto('./#/answers')
+  await page.getByRole('searchbox', { name: 'Поиск ответа' }).fill('zzzz-no-results')
+  await expect(page.getByText('Ничего не найдено. Попробуйте другое слово или категорию.')).toBeVisible()
+})
+
 test('home view has no WCAG A/AA axe violations', async ({ page }) => {
   await page.goto('./#/home')
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   expect(results.violations).toEqual([])
 })
 
-test('answers, mobile search, and composer have no WCAG A/AA axe violations', async ({ page }) => {
+test('answers, mobile search, scenarios, and composer have no WCAG A/AA axe violations', async ({ page }) => {
   const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
   await page.goto('./#/answers')
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
@@ -237,6 +328,12 @@ test('answers, mobile search, and composer have no WCAG A/AA axe violations', as
   await page.getByRole('searchbox', { name: 'Поиск по ответам' }).fill('белый геймпад')
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
   await page.getByRole('option', { name: 'Есть белые геймпады Xbox' }).click()
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
+  await page.goto('./#/flow/delivery')
+  await page.getByRole('group', { name: 'Ситуации доставки' }).getByRole('button', { name: 'Заказ отправлен' }).click()
+  expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
+  await page.goto('./#/flow/pickup')
+  await page.getByRole('group', { name: 'Ситуации самовывоза' }).getByRole('button', { name: 'Интересуется самовывозом' }).click()
   expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([])
 })
 
@@ -254,7 +351,7 @@ test('service worker caches app shell and permits offline reload', async ({ page
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null)
   await context.setOffline(true)
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'Что нужно сделать?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Подготовить сообщение' })).toBeVisible()
   await page.getByRole('button', { name: /Авито Доставка/ }).click()
   await expect(page.getByRole('heading', { name: 'Авито Доставка' })).toBeVisible()
   await page.getByRole('navigation').getByRole('button', { name: 'Ответы' }).click()

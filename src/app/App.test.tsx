@@ -9,7 +9,7 @@ describe('app shell', () => {
   it('shows exactly three primary sections and marks Home active', () => {
     render(<App />)
 
-    expect(screen.getByRole('heading', { name: 'Что нужно сделать?' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Подготовить сообщение' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     expect(screen.getAllByRole('navigation')).toHaveLength(1)
     const nav = screen.getByRole('navigation', { name: 'Основная навигация' })
@@ -86,7 +86,7 @@ describe('app shell', () => {
   it('shows the eight named quick answer intents', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /Ответить покупателю/ }))
-    expect(screen.getAllByRole('heading', { name: 'Что спросил покупатель?' })).toHaveLength(2)
+    expect(screen.getAllByRole('heading', { name: 'Быстрые ответы' })).toHaveLength(1)
     for (const label of ['Есть ли товар в наличии?', 'Можно ли доставкой?', 'Можно ли самовывозом?', 'Сделаете фотографии?', 'Подойдёт ли аксессуар?', 'Возможен ли торг?', 'Когда отправите?', 'Спасибо за покупку']) {
       expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
     }
