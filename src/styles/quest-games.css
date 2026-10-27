@@ -1,0 +1,45 @@
+.quest-games-page{min-width:0;max-width:1160px}
+.quest-games-back{display:inline-flex;align-items:center;min-height:44px;margin:0 0 10px}
+.quest-games-header h1{font-size:26px;font-weight:650}
+.quest-games-header p{margin:8px 0 0;color:var(--text-secondary);font-size:14px;line-height:1.5}
+.quest-games-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.85fr);gap:30px;align-items:start;margin-top:24px}
+.quest-games-catalog,.quest-games-priority{min-width:0}
+.quest-games-title-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:1px solid var(--border-subtle);padding:0 0 12px}
+.quest-games-title-row h2{font-size:17px;font-weight:600;margin:0}
+.quest-games-title-row span,.quest-games-title-row strong{font-size:13px;font-weight:500;color:var(--text-secondary)}
+.quest-games-filters{display:flex;gap:12px;margin:16px 0 8px}
+.quest-games-filters label{display:flex;flex:1;flex-direction:column;gap:6px;min-width:0;font-size:13px;color:var(--text-secondary)}
+.quest-games-filters label:first-child{flex:1.6}
+.quest-games-filters input,.quest-games-filters select{width:100%;min-width:0;min-height:44px;background:var(--surface-primary);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:8px;font-size:14px;padding:8px 10px}
+.quest-games-note{color:var(--text-secondary);font-size:12px;line-height:1.5;margin:12px 0}
+.quest-games-list{border-top:1px solid var(--border-subtle)}
+.quest-games-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;padding:13px 6px;border-bottom:1px solid var(--border-subtle)}
+.quest-games-entry.is-selected{background:var(--surface-selected)}
+.quest-games-entry-copy{min-width:0;flex:1}
+.quest-games-entry-copy strong{display:block;font-size:14px;font-weight:600;line-height:1.4}
+.quest-games-entry-copy small{display:block;font-size:12px;color:var(--text-secondary);margin-top:5px}
+.quest-games-entry-copy p{font-size:12px;color:var(--text-secondary);line-height:1.45;margin:5px 0 0;overflow-wrap:anywhere}
+.quest-games-entry-copy .quest-games-entry-note{color:var(--text-info)}
+.quest-games-add{min-height:44px;flex-shrink:0;padding:8px 10px;background:var(--surface-primary);border:1px solid var(--border-subtle);border-radius:8px;color:var(--brand-primary);font-size:13px;font-weight:600;cursor:pointer}
+.quest-games-add[aria-pressed=true]{background:var(--surface-selected);border-color:var(--brand-primary)}
+.quest-games-add:disabled{opacity:.6;cursor:not-allowed}
+.quest-games-priority{padding-left:26px;border-left:1px solid var(--border-subtle)}
+.quest-games-chosen{padding:0;margin:6px 0 0;list-style:none}
+.quest-games-chosen li{display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border-subtle);padding:6px 0;min-height:50px}
+.quest-games-rank{flex:0 0 20px;width:20px;text-align:right;color:var(--text-secondary);font-size:13px;font-variant-numeric:tabular-nums}
+.quest-games-chosen-name{flex:1;min-width:0;font-size:13px;overflow-wrap:anywhere}
+.quest-games-order{display:flex;gap:4px;flex-shrink:0}
+.quest-games-order button{min-width:35px;min-height:42px;border:1px solid var(--border-subtle);border-radius:7px;background:var(--surface-primary);cursor:pointer}
+.quest-games-order button:disabled{opacity:.35;cursor:not-allowed}
+.quest-games-empty{font-size:13px;line-height:1.5;color:var(--text-secondary)}
+.quest-games-clear{min-height:44px;border:0;background:transparent;padding:8px 0;color:var(--brand-primary);cursor:pointer;font-size:13px}
+.quest-games-copy-label{display:block;margin:16px 0 7px;font-size:13px;font-weight:600}
+.quest-games-priority textarea{display:block;width:100%;min-height:116px;padding:12px;line-height:1.5;font-size:13px;background:var(--surface-primary);border:1px solid var(--border-subtle);border-radius:8px;color:var(--text-primary);resize:vertical}
+.quest-games-copy{width:100%;min-height:44px;margin-top:10px}
+.quest-games-invite{border-top:1px solid var(--border-subtle);margin-top:22px;padding-top:14px}
+.quest-games-invite h3{font-size:15px;font-weight:600;margin:0}
+.quest-games-invite p{font-size:13px;line-height:1.5;color:var(--text-secondary);margin:8px 0 12px}
+.quest-games-invite button{min-height:44px}
+.quest-games-status{color:var(--text-info);font-size:13px;min-height:22px;line-height:1.4}
+@media(max-width:850px){.quest-games-layout{display:flex;flex-direction:column-reverse;gap:25px}.quest-games-priority{border-left:0;padding-left:0;border-bottom:1px solid var(--border-subtle);padding-bottom:16px}.quest-games-catalog,.quest-games-priority{width:100%}.quest-games-header h1{font-size:24px}}
+@media(max-width:420px){.quest-games-filters{flex-direction:column}.quest-games-entry{gap:7px}.quest-games-add{padding:7px 8px}.quest-games-priority{margin-bottom:3px}}
