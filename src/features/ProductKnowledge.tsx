@@ -5,7 +5,7 @@ import { buildProductAnswer, filterProducts, modelLabels, productCompatibility, 
 import { copyText } from '../lib/clipboard'
 import '../styles/products.css'
 
-type Props = { selectedId?: string; onSelect: (id: string) => void; onBack: () => void }
+type Props = { selectedId?: string; onSelect: (id: string) => void; onBack: () => void; onOpenGames: () => void }
 
 const categories = [
   ['all', 'Все товары'], ['headset', 'Шлемы'], ['strap', 'Ремешки'],
@@ -77,7 +77,7 @@ function ProductDetail({ product, onBack }: { product: Product; onBack: () => vo
   </section>
 }
 
-export default function ProductKnowledge({ selectedId, onSelect, onBack }: Props) {
+export default function ProductKnowledge({ selectedId, onSelect, onBack, onOpenGames }: Props) {
   const [view, setView] = useState<'products' | 'knowledge'>('products')
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
@@ -95,6 +95,7 @@ export default function ProductKnowledge({ selectedId, onSelect, onBack }: Props
     <div className="product-view-tabs" role="group" aria-label="Раздел товаров">
       <button type="button" aria-pressed={view === 'products'} onClick={()=>setView('products')}>Каталог товаров</button>
       <button type="button" aria-pressed={view === 'knowledge'} onClick={()=>setView('knowledge')}>База знаний</button>
+      <button type="button" onClick={onOpenGames}>Игры Quest · выбрать до 15</button>
     </div>
     {view === 'products' ? <div className={'product-layout' + (selectedProduct ? ' product-has-selection' : '')}>
       <div className="product-master">
