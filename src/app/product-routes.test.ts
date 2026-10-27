@@ -8,7 +8,7 @@ describe('product routes', () => {
   })
   it('opens a direct public games route under products', () => {
     expect(resolveRoute('#/games').route).toEqual({ kind: 'games' })
-    expect(routeHash({ kind: 'games' })).toBe('#/games'
+    expect(routeHash({ kind: 'games' })).toBe('#/games')
     expect(primarySectionFor({ kind: 'games' })).toBe('products')
   })
   it('rejects nonexistent product links safely', () => {
