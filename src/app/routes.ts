@@ -6,6 +6,7 @@ export type AppRoute =
   | { kind: 'home' }
   | { kind: 'answers' }
   | { kind: 'products' }
+  | { kind: 'games' }
   | { kind: 'product'; id: string }
   | { kind: 'settings' }
   | { kind: 'quick' }
@@ -24,6 +25,7 @@ export function routeHash(route: AppRoute): string {
     case 'home': return '#/home'
     case 'answers': return '#/answers'
     case 'products': return '#/products'
+    case 'games': return '#/games'
     case 'product': return `#/products/${encodeURIComponent(route.id)}`
     case 'settings': return '#/settings'
     case 'quick': return '#/quick'
@@ -39,6 +41,7 @@ export function resolveRoute(hash: string): ResolvedRoute {
   if (normalized === 'templates' || normalized === 'use-template') return { route: { kind: 'answers' }, canonicalHash: '#/answers' }
   if (normalized === 'answers') return { route: { kind: 'answers' }, canonicalHash: '#/answers' }
   if (normalized === 'products') return { route: { kind: 'products' }, canonicalHash: '#/products' }
+  if (normalized === 'games') return { route: { kind: 'games' }, canonicalHash: '#/games' }
   const productMatch = normalized.match(/^products\/([^/]+)$/u)
   if (productMatch) {
     let id = productMatch[1]!
@@ -68,7 +71,7 @@ export function resolveRoute(hash: string): ResolvedRoute {
 
 export function primarySectionFor(route: AppRoute): PrimarySection {
   if (route.kind === 'settings') return 'settings'
-  if (route.kind === 'products' || route.kind === 'product') return 'products'
+  if (route.kind === 'products' || route.kind === 'product' || route.kind === 'games') return 'products'
   if (route.kind === 'answers' || route.kind === 'template') return 'answers'
   return 'home'
 }
