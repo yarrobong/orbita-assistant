@@ -64,7 +64,7 @@ export default function QuestGamesPicker({ onBack }: { onBack: () => void }) {
                 {game.description && <p>{game.description}</p>}
                 {game.note && <p className="quest-games-entry-note">Примечание: {game.note}</p>}
               </div>
-              <button type="button" className="quest-games-add" onClick={() => toggle(game.id)} aria-pressed={selected} aria-label={selected ? 'Убрать игру ' + game.title : 'Добавить игру ' + game.title} disabled={!selected && selection.length >= MAX_QUEST_GAMES}>{selected ? '№ ' + (index + 1) + ' · Убрать' : 'Добавить'}</button>
+              <button type="button" className="quest-games-add" onClick={() => toggle(game.id)} aria-pressed={selected} aria-label={selected ? '№ ' + (index + 1) + ' · Убрать игру ' + game.title : 'Добавить игру ' + game.title} disabled={!selected && selection.length >= MAX_QUEST_GAMES}>{selected ? '№ ' + (index + 1) + ' · Убрать' : 'Добавить'}</button>
             </div>
           })}
           {filtered.length === 0 && <p className="quest-games-note">Ничего не найдено. Измените поиск или фильтр.</p>}

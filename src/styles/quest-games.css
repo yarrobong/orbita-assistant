@@ -43,3 +43,6 @@
 .quest-games-status{color:var(--text-info);font-size:13px;min-height:22px;line-height:1.4}
 @media(max-width:850px){.quest-games-layout{display:flex;flex-direction:column-reverse;gap:25px}.quest-games-priority{border-left:0;padding-left:0;border-bottom:1px solid var(--border-subtle);padding-bottom:16px}.quest-games-catalog,.quest-games-priority{width:100%}.quest-games-header h1{font-size:24px}}
 @media(max-width:420px){.quest-games-filters{flex-direction:column}.quest-games-entry{gap:7px}.quest-games-add{padding:7px 8px}.quest-games-priority{margin-bottom:3px}}
+
+/* Ensure WCAG AA contrast for 13px link-like controls on light-blue / off-white surfaces. */
+.quest-games-add,.quest-games-clear{color:var(--color-accent-dark)}

@@ -34,7 +34,7 @@ test('selection cannot exceed 15 and filters preserve chosen priorities', async 
   await expect(page.getByText('15 / 15')).toBeVisible()
   await expect(page.getByRole('button', { name: /^Добавить игру /u }).first()).toBeDisabled()
   await page.getByRole('searchbox', { name: 'Найти игру' }).fill('Alvo')
-  await expect(page.getByText('Частично', { exact: false }).first()).toBeVisible()
+  await expect(page.getByText('Мультиплеер по таблице: Частично', { exact: true })).toBeVisible()
   await expect(page.getByText('15 / 15')).toBeVisible()
   await page.getByRole('button', { name: /Удалить .* из списка/u }).first().click()
   await expect(page.getByText('14 / 15')).toBeVisible()
