@@ -1,7 +1,7 @@
 export type FlowPath = 'new' | 'delivery' | 'pickup' | 'after-purchase'
 export type Audience = 'buyer' | 'handover'
 export type TemplateCategory = 'general' | 'product' | 'delivery' | 'pickup' | 'after-purchase' | 'quest' | 'safety' | 'other'
-export type SourceCollection = 'Топ-15' | 'Все ответы' | 'Автоответы — безопасные' | 'Сценарии сделок'
+export type SourceCollection = 'Топ-15' | 'Все ответы' | 'Автоответы — безопасные' | 'Сценарии сделок' | 'ORBITA — начало диалога'
 
 export type FlagName =
   | 'stockConfirmed' | 'deliveryAvailable' | 'orderVerified' | 'shippedVerified'

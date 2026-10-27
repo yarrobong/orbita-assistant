@@ -193,7 +193,7 @@ test('desktop answer selection keeps the catalog visible beside the selected tem
   await expect(page).toHaveURL(/#\/template\/[\w%-]+$/u)
   await expect(page.locator('.master-pane')).toBeVisible()
   await expect(page.locator('.detail-pane')).toBeVisible()
-  await expect(page.locator('.master-pane .template-row')).toHaveCount(118)
+  await expect(page.locator('.master-pane .template-row')).toHaveCount(123)
 })
 
 test('mobile answer selection opens sequential details and returns to the list', async ({ page }) => {
@@ -222,6 +222,25 @@ test('quick answer opens source template beside its list and records only its ID
   await expect.poll(() => page.evaluate(() => localStorage.getItem('orbita:recent-templates'))).toContain('auto-10')
   await page.getByRole('navigation').getByRole('button', { name: 'Главная' }).click()
   await expect(page.getByRole('button', { name: /Можно дополнительные фото/ })).toBeVisible()
+})
+
+test('silent visitor greetings are optional and directly copyable from quick answers', async ({ page }) => {
+  await page.goto('./#/quick')
+  await expect(page.getByRole('heading', { name: 'Покупатель ещё ничего не написал' })).toBeVisible()
+  const choice = page.getByRole('button', { name: 'Начать разговор — ненавязчиво' })
+  await choice.click()
+  await expect(page).toHaveURL(/silent-01$/u)
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Копировать' }).click()
+  await expect(page.getByText('Скопировано')).toBeVisible()
+  await expect(page.getByLabel('Текст сообщения')).toHaveText('Здравствуйте! Если возникнут вопросы по объявлению, с удовольствием подскажу.')
+  await expect(page.getByLabel('Текст сообщения')).not.toContainText('заходили в чат')
+})
+
+test('silent-visitor templates are findable in the original answers library', async ({ page }) => {
+  await page.goto('./#/answers')
+  await page.getByRole('searchbox', { name: 'Поиск ответа' }).fill('молчит')
+  await expect(page.getByRole('heading', { name: 'Начать разговор — ненавязчиво' })).toBeVisible()
 })
 
 test('search opens focused on mobile, filters as you type, and supports the desktop shortcut', async ({ page }) => {
@@ -275,7 +294,7 @@ test('responsive workspace has no horizontal overflow at all target widths', asy
     await expect(page.getByRole('heading', { name: 'Подготовить сообщение' })).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
     await page.goto('./#/answers')
-    await expect(page.locator('.template-row')).toHaveCount(118)
+    await expect(page.locator('.template-row')).toHaveCount(123)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
     await page.goto('./#/flow/delivery')
     await page.getByRole('group', { name: 'Ситуации доставки' }).getByRole('button', { name: 'Заказ отправлен' }).click()

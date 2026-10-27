@@ -211,6 +211,9 @@ h1 { margin: 0; font-size: clamp(24px, 4vw, 28px); letter-spacing: -.025em; }
 .quick-answers { margin: 0; }
 .quick-answers .section-heading { margin: 0 0 12px; }
 .quick-answers .section-heading h1 { font-size: 21px; letter-spacing: -.015em; }
+.quick-answers-silent { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+.quick-answers-silent h2 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+.quick-answers-silent .lead { margin: 0 0 12px; font-size: 13px; line-height: 1.5; }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .section-heading h2 { margin: 0; font-size: 17px; }
 .section-heading p { margin: 5px 0 10px; color: var(--color-muted); font-size: 13px; }
