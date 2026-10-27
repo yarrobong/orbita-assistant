@@ -224,6 +224,24 @@ test('quick answer opens source template beside its list and records only its ID
   await expect(page.getByRole('button', { name: /Можно дополнительные фото/ })).toBeVisible()
 })
 
+test('silent visitor greetings are optional and directly copyable from quick answers', async ({ page }) => {
+  await page.goto('./#/quick')
+  await expect(page.getByRole('heading', { name: 'Покупатель ещё ничего не написал' })).toBeVisible()
+  const choice = page.getByRole('button', { name: 'Начать разговор — ненавязчиво' })
+  await choice.click()
+  await expect(page).toHaveURL(/#\\/template\\/silent-01$/u)
+  await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Копировать' }).click()
+  await expect(page.getByText('Скопировано')).toBeVisible()
+  await expect(page.locator('.message-preview')).not.toContainText('заходили')
+})
+
+test('silent-visitor templates are findable in the original answers library', async ({ page }) => {
+  await page.goto('./#/answers')
+  await page.getByRole('searchbox', { name: 'Поиск ответа' }).fill('молчит')
+  await expect(page.getByRole('heading', { name: 'Начать разговор — ненавязчиво' })).toBeVisible()
+})
+
 test('search opens focused on mobile, filters as you type, and supports the desktop shortcut', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 })
   await page.goto('./#/home')

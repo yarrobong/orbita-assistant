@@ -18,6 +18,17 @@ describe('source-grounded template catalog', () => {
     expect(searchTemplates(templateCatalog, 'самовывоз', 'pickup').length).toBeGreaterThan(0)
   })
 
+  it('preserves all original 118 answers and adds only five first-contact variants', () => {
+    expect(templateCatalog).toHaveLength(123)
+    expect(templateCatalog.filter((item) => item.source === 'ORBITA — начало диалога')).toHaveLength(5)
+    expect(new Set(templateCatalog.map(({ id }) => id)).size).toBe(templateCatalog.length)
+    for (const item of templateCatalog.filter((item) => item.source === 'ORBITA — начало диалога')) {
+      expect(canUseTemplate(item, initialFlowState('new')).allowed).toBe(true)
+      expect(renderTemplate(item, {}).copyable).toBe(true)
+      expect(item.body).not.toContain('{{')
+    }
+  })
+
   it('keeps a thank-you after a received review separate from a review request', () => {
     const thankYou = templateCatalog.find((item) => item.id === 'scenario-24')!
     const request = templateCatalog.find((item) => item.id === 'scenario-23')!

@@ -8,3 +8,12 @@ export const quickAnswers = [
   { label: 'Когда отправите?', templateId: 'auto-08' },
   { label: 'Спасибо за покупку', templateId: 'scenario-11' },
 ] as const
+
+/** Non-automated, optional first-contact messages. Never imply activity tracking. */
+export const silentChatAnswers = [
+  { label: 'Начать разговор — ненавязчиво', templateId: 'silent-01' },
+  { label: 'Начать разговор — короткий вопрос', templateId: 'silent-02' },
+  { label: 'Помочь выбрать товар', templateId: 'silent-03' },
+  { label: 'Подсказать способы получения', templateId: 'silent-04' },
+  { label: 'Уточнить фото и комплектацию', templateId: 'silent-05' },
+] as const
