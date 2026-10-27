@@ -11,7 +11,6 @@ import SettingsScreen from '../features/SettingsScreen'
 import TemplateLibrary from '../features/TemplateLibrary'
 import QuickAnswers from '../features/QuickAnswers'
 import ProductKnowledge from '../features/ProductKnowledge'
-import QuestGamesPicker from '../features/QuestGamesPicker'
 import { copyText } from '../lib/clipboard'
 import { normalizeRecentIds, rememberTemplate } from '../lib/template-preferences'
 import { searchTemplates } from '../lib/search'
@@ -165,7 +164,6 @@ function AppShell() {
     if (id === 'templates' || id === 'answers') { navigate({ kind: 'answers' }); return }
     if (id === 'quick') { navigate({ kind: 'quick' }); return }
     if (id === 'products') { navigate({ kind: 'products' }); return }
-    if (id === 'games') { navigate({ kind: 'games' }); return }
     const path = (['new', 'delivery', 'pickup', 'after-purchase'].includes(id) ? id : 'new') as FlowPath
     const stage = ({ new: 'N0', delivery: 'D0', pickup: 'P0', 'after-purchase': 'AFTER_REVIEW' } as Record<FlowPath, string>)[path]
     const next = { path: id, stage, reviewRequested: false, issueOpen: false }
@@ -202,8 +200,7 @@ function AppShell() {
         {showQuickAnswers && <div className={`master-detail answer-workspace${selectedQuickId ? ' has-selection' : ''}`}><div className="master-pane"><QuickAnswers selectedTemplateId={selectedQuickId} onChoose={(id) => openTemplate(id, 'quick')} /></div>{selectedQuickId && selected && <div className="detail-pane"><TemplateUse embedded backLabel="Быстрые ответы" template={selected} onBack={() => navigate({ kind: 'quick' })} onCopied={() => markTemplateUsed(selected.id)} /></div>}{route.kind === 'quick' && <div className="detail-empty">Выберите ситуацию, чтобы открыть сообщение.</div>}</div>}
         {route.kind === 'flow' && <FlowScreen key={route.path} kind={route.path} flowState={liveFlow?.path === route.path ? liveFlow : initialFlowState(route.path)} onFlowStateChange={setLiveFlow} initialStage={lastScenario?.path === route.path ? lastScenario.stage : undefined} initialReviewRequested={lastScenario?.path === route.path && lastScenario.reviewRequested} initialIssueOpen={lastScenario?.path === route.path && lastScenario.issueOpen} onBack={() => navigate({ kind: 'home' })} onStageChange={(path, stage) => setLastScenario((current) => ({ path, stage, reviewRequested: current?.path === path && current.reviewRequested, issueOpen: current?.path === path && current.issueOpen }))} onStatusChange={(state) => setLastScenario({ path: state.path, stage: state.stage, reviewRequested: state.flags.reviewRequested, issueOpen: state.flags.issueOpen })} />}
         {showTemplateLibrary && <div className={`master-detail answer-workspace${selectedLibraryId ? ' has-selection' : ''}`}><div className="master-pane"><TemplateLibrary embedded selectedId={selectedLibraryId} favorites={favorites} recentIds={recentIds} query={query} onQueryChange={setQuery} onFavorite={favorite} onUse={(id) => openTemplate(id, 'library')} onCopy={(_id, text) => copyText(text)} onCopied={markTemplateUsed} /></div>{selectedLibraryId && selected && <div className="detail-pane"><TemplateUse embedded template={selected} onBack={() => navigate({ kind: 'answers' })} onCopied={() => markTemplateUsed(selected.id)} /></div>}{route.kind === 'answers' && <div className="detail-empty">Выберите ответ, чтобы прочитать и подготовить сообщение.</div>}</div>}
-        {(route.kind === 'products' || route.kind === 'product') && <ProductKnowledge selectedId={route.kind === 'product' ? route.id : undefined} onSelect={(id) => navigate({ kind: 'product', id })} onBack={() => navigate({ kind: 'products' })} onOpenGames={() => navigate({ kind: 'games' })} />}
-        {route.kind === 'games' && <QuestGamesPicker onBack={() => navigate({ kind: 'products' })} />}
+        {(route.kind === 'products' || route.kind === 'product') && <ProductKnowledge selectedId={route.kind === 'product' ? route.id : undefined} onSelect={(id) => navigate({ kind: 'product', id })} onBack={() => navigate({ kind: 'products' })} />}
         {route.kind === 'settings' && <SettingsScreen onClear={() => { setFavorites([]); setRecentIds([]); setLastScenario(null); setLiveFlow(null); localStorage.removeItem('orbita:last-scenario'); localStorage.removeItem('orbita:recent-templates'); navigate({ kind: 'home' }) }} />}
       </main>
     </div>

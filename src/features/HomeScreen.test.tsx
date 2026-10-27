@@ -21,7 +21,6 @@ describe('home workspace', () => {
     expect(screen.getByRole('button', { name: /Авито Доставка/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Самовывоз/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /После покупки/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Игры для Quest/ })).toBeInTheDocument()
     expect(screen.queryByText('ORBITA ASSISTANT')).not.toBeInTheDocument()
   })
 
