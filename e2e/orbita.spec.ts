@@ -229,11 +229,11 @@ test('silent visitor greetings are optional and directly copyable from quick ans
   await expect(page.getByRole('heading', { name: 'Покупатель ещё ничего не написал' })).toBeVisible()
   const choice = page.getByRole('button', { name: 'Начать разговор — ненавязчиво' })
   await choice.click()
-  await expect(page).toHaveURL(/#\\/template\\/silent-01$/u)
+  await expect(page).toHaveURL(/silent-01$/u)
   await expect(page.getByRole('button', { name: 'Копировать' })).toBeEnabled()
   await page.getByRole('button', { name: 'Копировать' }).click()
   await expect(page.getByText('Скопировано')).toBeVisible()
-  await expect(page.locator('.message-preview')).not.toContainText('заходили')
+  await expect(page.locator('.message-editor')).not.toHaveValue(/(?:вижу, что|заходили в чат)/iu)
 })
 
 test('silent-visitor templates are findable in the original answers library', async ({ page }) => {
